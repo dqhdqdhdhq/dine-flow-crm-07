@@ -70,7 +70,7 @@ const Sidebar: React.FC = () => {
             <SidebarMenu>
               {navigationItems.map((item) => (
                 <SidebarMenuItem key={item.path}>
-                  <SidebarMenuButton asChild active={location.pathname === item.path}>
+                  <SidebarMenuButton asChild isActive={location.pathname === item.path}>
                     <Link to={item.path}>
                       <item.icon className="h-5 w-5" />
                       <span>{item.title}</span>

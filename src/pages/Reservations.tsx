@@ -124,7 +124,7 @@ const Reservations: React.FC = () => {
             {sortedTimeSlots.map((timeSlot) => (
               <div key={timeSlot} className="space-y-3">
                 <h3 className="font-medium">
-                  {timeSlot.split(':')[0] % 12 || 12}:{timeSlot.split(':')[1]} {parseInt(timeSlot.split(':')[0]) >= 12 ? 'PM' : 'AM'}
+                  {parseInt(timeSlot.split(':')[0]) % 12 || 12}:{timeSlot.split(':')[1]} {parseInt(timeSlot.split(':')[0]) >= 12 ? 'PM' : 'AM'}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {groupedReservations[timeSlot].map((reservation) => (
