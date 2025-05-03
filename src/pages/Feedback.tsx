@@ -24,8 +24,8 @@ import { Feedback, FeedbackType } from '@/types';
 
 const FeedbackPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState<string>('');
-  const [followUpFilter, setFollowUpFilter] = useState<string>('');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [followUpFilter, setFollowUpFilter] = useState<string>('all');
   
   const filteredFeedback = mockFeedback.filter(fb => {
     const matchesSearch = 
@@ -33,10 +33,10 @@ const FeedbackPage: React.FC = () => {
       fb.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (fb.followUpNotes && fb.followUpNotes.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const matchesType = typeFilter === '' || fb.type === typeFilter;
+    const matchesType = typeFilter === 'all' || fb.type === typeFilter;
     
     const matchesFollowUp = 
-      followUpFilter === '' || 
+      followUpFilter === 'all' || 
       (followUpFilter === 'required' && fb.followUpRequired) ||
       (followUpFilter === 'completed' && fb.followUpDone) ||
       (followUpFilter === 'pending' && fb.followUpRequired && !fb.followUpDone);
@@ -101,7 +101,7 @@ const FeedbackPage: React.FC = () => {
               <SelectValue placeholder="All Types" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Types</SelectItem>
+              <SelectItem value="all">All Types</SelectItem>
               <SelectItem value="positive">Positive</SelectItem>
               <SelectItem value="negative">Negative</SelectItem>
               <SelectItem value="suggestion">Suggestion</SelectItem>
@@ -116,7 +116,7 @@ const FeedbackPage: React.FC = () => {
               <SelectValue placeholder="All Follow-ups" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Follow-ups</SelectItem>
+              <SelectItem value="all">All Follow-ups</SelectItem>
               <SelectItem value="required">Required</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>
