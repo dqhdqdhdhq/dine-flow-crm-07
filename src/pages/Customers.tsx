@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { mockCustomers } from '@/data/mockData';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Filter, SlidersHorizontal } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -15,16 +15,67 @@ import {
   CardFooter,
 } from '@/components/ui/card';
 import { Customer } from '@/types';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const Customers: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [tagFilter, setTagFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<string>('name');
+  const [hasAllergies, setHasAllergies] = useState<boolean | null>(null);
   
-  const filteredCustomers = mockCustomers.filter(customer => 
-    customer.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.phone.includes(searchTerm)
-  );
+  // Get unique tags from all customers
+  const allTags = Array.from(
+    new Set(mockCustomers.flatMap(customer => customer.tags))
+  ).sort();
+  
+  const filteredCustomers = mockCustomers.filter(customer => {
+    const matchesSearch = 
+      customer.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.phone.includes(searchTerm) ||
+      customer.preferences.some(pref => pref.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      customer.allergies.some(allergy => allergy.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesTag = tagFilter === 'all' || customer.tags.includes(tagFilter);
+    
+    const matchesAllergies = 
+      hasAllergies === null || 
+      (hasAllergies === true && customer.allergies.length > 0) ||
+      (hasAllergies === false && customer.allergies.length === 0);
+    
+    return matchesSearch && matchesTag && matchesAllergies;
+  });
+  
+  // Sort customers
+  const sortedCustomers = [...filteredCustomers].sort((a, b) => {
+    switch (sortBy) {
+      case 'name':
+        return `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`);
+      case 'visits':
+        return b.visits - a.visits; // Most visits first
+      case 'lastVisit':
+        // Handle null last visits
+        if (!a.lastVisit) return 1;
+        if (!b.lastVisit) return -1;
+        return new Date(b.lastVisit).getTime() - new Date(a.lastVisit).getTime(); // Most recent first
+      case 'loyaltyPoints':
+        return b.loyaltyPoints - a.loyaltyPoints; // Most points first
+      default:
+        return 0;
+    }
+  });
   
   const getBadgeStyle = (tag: string) => {
     switch (tag.toLowerCase()) {
@@ -51,20 +102,78 @@ const Customers: React.FC = () => {
         </Link>
       </div>
       
-      <div className="relative w-full max-w-sm">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          type="search"
-          placeholder="Search customers..."
-          className="pl-8"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+        <div className="relative w-full max-w-sm">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Search customers..."
+            className="pl-8"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        
+        <div className="flex flex-wrap gap-2">
+          <Select value={tagFilter} onValueChange={setTagFilter}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="All Tags" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Tags</SelectItem>
+              {allTags.map((tag) => (
+                <SelectItem key={tag} value={tag}>{tag}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Sort By" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="name">Name</SelectItem>
+              <SelectItem value="visits">Most Visits</SelectItem>
+              <SelectItem value="lastVisit">Recent Visit</SelectItem>
+              <SelectItem value="loyaltyPoints">Loyalty Points</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="h-10">
+                <SlidersHorizontal className="mr-2 h-4 w-4" />
+                More Filters
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[200px] p-4">
+              <div className="space-y-4">
+                <h4 className="font-medium">Dietary Restrictions</h4>
+                <div className="flex flex-col gap-2">
+                  <Button 
+                    variant={hasAllergies === true ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setHasAllergies(hasAllergies === true ? null : true)}
+                  >
+                    Has Allergies
+                  </Button>
+                  <Button 
+                    variant={hasAllergies === false ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setHasAllergies(hasAllergies === false ? null : false)}
+                  >
+                    No Allergies
+                  </Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredCustomers.length > 0 ? (
-          filteredCustomers.map((customer) => (
+        {sortedCustomers.length > 0 ? (
+          sortedCustomers.map((customer) => (
             <CustomerCard key={customer.id} customer={customer} badgeStyle={getBadgeStyle} />
           ))
         ) : (
@@ -85,7 +194,7 @@ interface CustomerCardProps {
 const CustomerCard: React.FC<CustomerCardProps> = ({ customer, badgeStyle }) => {
   return (
     <Link to={`/customers/${customer.id}`}>
-      <Card className="customer-card h-full">
+      <Card className="customer-card h-full hover:shadow-md transition-all">
         <CardHeader className="pb-2">
           <CardTitle>{customer.firstName} {customer.lastName}</CardTitle>
           <CardDescription>{customer.email}</CardDescription>

@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MainLayout from "./components/layout/MainLayout";
 import Dashboard from "./pages/Dashboard";
 import Customers from "./pages/Customers";
+import CustomerProfile from "./pages/CustomerProfile";
 import Reservations from "./pages/Reservations";
 import Notes from "./pages/Notes";
 import FeedbackPage from "./pages/Feedback";
@@ -23,6 +24,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<MainLayout><Dashboard /></MainLayout>} />
           <Route path="/customers" element={<MainLayout><Customers /></MainLayout>} />
+          <Route path="/customers/:id" element={<MainLayout><CustomerProfile /></MainLayout>} />
           <Route path="/reservations" element={<MainLayout><Reservations /></MainLayout>} />
           <Route path="/notes" element={<MainLayout><Notes /></MainLayout>} />
           <Route path="/feedback" element={<MainLayout><FeedbackPage /></MainLayout>} />
