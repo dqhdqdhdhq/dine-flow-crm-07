@@ -24,7 +24,7 @@ import { Note, NoteCategory } from '@/types';
 
 const Notes: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [showStarredOnly, setShowStarredOnly] = useState(false);
   
   const filteredNotes = mockNotes.filter(note => {
@@ -33,7 +33,7 @@ const Notes: React.FC = () => {
       note.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
       note.updatedBy.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesCategory = categoryFilter === '' || note.category === categoryFilter;
+    const matchesCategory = categoryFilter === 'all' || note.category === categoryFilter;
     const matchesStarred = !showStarredOnly || note.isStarred;
     
     return matchesSearch && matchesCategory && matchesStarred;
@@ -85,7 +85,7 @@ const Notes: React.FC = () => {
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Categories</SelectItem>
+              <SelectItem value="all">All Categories</SelectItem>
               <SelectItem value="reservation">Reservation</SelectItem>
               <SelectItem value="customer">Customer</SelectItem>
               <SelectItem value="staff">Staff</SelectItem>
