@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { Reservation } from '@/types';
+import { Reservation, ReservationStatus } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Users, Check, X, Bell, Edit } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -171,7 +170,7 @@ const DashboardUpcomingReservations: React.FC<DashboardUpcomingReservationsProps
     return `${formattedHour}:${minutes} ${ampm}`;
   };
 
-  const handleUpdateStatus = (reservation: Reservation, newStatus: 'confirmed' | 'seated' | 'cancelled' | 'no-show') => {
+  const handleUpdateStatus = (reservation: Reservation, newStatus: ReservationStatus) => {
     const updatedReservation = {
       ...reservation,
       status: newStatus

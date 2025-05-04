@@ -265,8 +265,9 @@ const DashboardTableStatus: React.FC<DashboardTableStatusProps> = ({ tables }) =
       number: newTable.number || tables.length + 1,
       capacity: newTable.capacity || 4,
       status: 'available',
+      section: 'main',
       location: newTable.location || 'Main Dining'
-    });
+    } as Table);
   };
   
   const handleUpdateTable = (tableId: string, updates: Partial<Table>) => {
