@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -319,31 +318,30 @@ const EventDetailsDialog: React.FC<EventDetailsDialogProps> = ({ event, isOpen, 
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {event.resources
-                        .reduce((grouped, resource) => {
+                      {Object.entries(
+                        event.resources.reduce((grouped, resource) => {
                           if (!grouped[resource.type]) {
                             grouped[resource.type] = [];
                           }
                           grouped[resource.type].push(resource);
                           return grouped;
                         }, {} as Record<string, typeof event.resources>)
-                        .map((resourceGroup, type) => (
-                          <div key={type} className="space-y-2">
-                            <h3 className="font-medium capitalize">{type === 'room' ? 'Rooms' : type === 'section' ? 'Sections' : type === 'table' ? 'Tables' : 'Equipment'}</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                              {resourceGroup.map(resource => (
-                                <div key={resource.id} className="border rounded-md p-3 flex justify-between">
-                                  <div>
-                                    <p>{resource.name}</p>
-                                    {resource.notes && <p className="text-sm text-muted-foreground">{resource.notes}</p>}
-                                  </div>
-                                  {resource.quantity > 1 && <Badge variant="outline">{resource.quantity}x</Badge>}
+                      ).map(([type, resourceGroup]) => (
+                        <div key={type} className="space-y-2">
+                          <h3 className="font-medium capitalize">{type === 'room' ? 'Rooms' : type === 'section' ? 'Sections' : type === 'table' ? 'Tables' : 'Equipment'}</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            {resourceGroup.map(resource => (
+                              <div key={resource.id} className="border rounded-md p-3 flex justify-between">
+                                <div>
+                                  <p>{resource.name}</p>
+                                  {resource.notes && <p className="text-sm text-muted-foreground">{resource.notes}</p>}
                                 </div>
-                              ))}
-                            </div>
+                                {resource.quantity > 1 && <Badge variant="outline">{resource.quantity}x</Badge>}
+                              </div>
+                            ))}
                           </div>
-                        ))
-                      }
+                        </div>
+                      ))}
                     </div>
                   )}
                 </CardContent>
