@@ -15,6 +15,7 @@ import FeedbackPage from "./pages/Feedback";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Inventory from "./pages/Inventory";
+import Vendors from "./pages/Vendors";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/reservations" element={<MainLayout><Reservations /></MainLayout>} />
             <Route path="/reservations/new" element={<MainLayout><Reservations /></MainLayout>} />
             <Route path="/inventory" element={<MainLayout><Inventory /></MainLayout>} />
+            <Route path="/vendors" element={<MainLayout><Vendors /></MainLayout>} />
             <Route path="/notes" element={<MainLayout><Notes /></MainLayout>} />
             <Route path="/feedback" element={<MainLayout><FeedbackPage /></MainLayout>} />
             <Route path="/reports" element={<MainLayout><Reports /></MainLayout>} />

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Calendar, FileText, MessageSquare, BarChart2, Settings } from 'lucide-react';
+import { LayoutDashboard, Users, Calendar, FileText, MessageSquare, BarChart2, Settings, Store } from 'lucide-react';
 import {
   Sidebar as SidebarBase,
   SidebarContent,
@@ -41,6 +41,11 @@ const navigationItems = [
     title: 'Feedback',
     icon: MessageSquare,
     path: '/feedback'
+  },
+  {
+    title: 'Vendors',
+    icon: Store,
+    path: '/vendors'
   },
   {
     title: 'Reports',
