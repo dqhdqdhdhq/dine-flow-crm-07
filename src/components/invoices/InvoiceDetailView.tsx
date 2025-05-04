@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, Clock, Note, Download, Edit } from 'lucide-react';
+import { FileText, Clock, FileText as FileIcon, Download, Edit } from 'lucide-react';
 import { getInvoiceStatusLabel, getInvoiceCategoryLabel } from '@/data/invoicesData';
 
 interface InvoiceDetailViewProps {
@@ -43,7 +43,7 @@ const InvoiceDetailView: React.FC<InvoiceDetailViewProps> = ({
               <Clock className="h-4 w-4 mr-2" /> Payment History
             </TabsTrigger>
             <TabsTrigger value="notes" className="flex-1">
-              <Note className="h-4 w-4 mr-2" /> Notes
+              <FileIcon className="h-4 w-4 mr-2" /> Notes
             </TabsTrigger>
           </TabsList>
 
