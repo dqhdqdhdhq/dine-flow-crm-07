@@ -10,7 +10,8 @@ import {
   BarChart2, 
   Settings, 
   Store, 
-  DollarSign 
+  DollarSign,
+  CalendarDays
 } from 'lucide-react';
 import {
   Sidebar as SidebarBase,
@@ -44,6 +45,11 @@ const navigationItems = [
     title: 'Reservations',
     icon: Calendar,
     path: '/reservations'
+  },
+  {
+    title: 'Events',
+    icon: CalendarDays,
+    path: '/events'
   },
   {
     title: 'Notes',

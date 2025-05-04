@@ -1,3 +1,4 @@
+
 export interface Customer {
   id: string;
   firstName: string;
@@ -164,6 +165,93 @@ export interface Invoice {
   paymentDate?: string;
   fileUrl?: string;
   notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Event Command Center Types
+export type EventType = 'private-party' | 'public-ticketed' | 'holiday-special' | 'live-music' | 'corporate' | 'other';
+
+export type EventStatus = 'planning' | 'confirmed' | 'ongoing' | 'completed' | 'cancelled';
+
+export type ResourceType = 'room' | 'section' | 'table' | 'equipment';
+
+export interface EventTask {
+  id: string;
+  eventId: string;
+  title: string;
+  description?: string;
+  dueDate: string;
+  assignedTo?: string;
+  assignedToName?: string;
+  status: 'pending' | 'in-progress' | 'completed' | 'overdue';
+  completedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EventResource {
+  id: string;
+  name: string;
+  type: ResourceType;
+  quantity: number;
+  notes?: string;
+}
+
+export interface EventGuest {
+  id: string;
+  eventId: string;
+  customerId?: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  attendees: number;
+  status: 'confirmed' | 'pending' | 'cancelled' | 'checked-in';
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EventMenu {
+  id: string;
+  name: string;
+  description?: string;
+  items: {
+    name: string;
+    description?: string;
+    price: number;
+  }[];
+}
+
+export interface Event {
+  id: string;
+  name: string;
+  description?: string;
+  publicDescription?: string;
+  type: EventType;
+  status: EventStatus;
+  startDate: string;
+  endDate: string;
+  startTime: string;
+  endTime: string;
+  isMultiDay: boolean;
+  capacity: number;
+  bookedCount: number;
+  locationDetails: string;
+  resources: EventResource[];
+  ticketPrice?: number;
+  ticketSalesStart?: string;
+  ticketSalesEnd?: string;
+  minimumSpend?: number;
+  staffingRequirements?: {
+    role: string;
+    count: number;
+    assignedStaff?: string[];
+  }[];
+  menu?: EventMenu;
+  tasks?: EventTask[];
+  guests?: EventGuest[];
+  createdBy: string;
   createdAt: string;
   updatedAt: string;
 }
