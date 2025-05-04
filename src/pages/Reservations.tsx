@@ -6,7 +6,7 @@ import { Plus, Search, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRealtime } from '@/context/RealtimeContext';
-import { ReservationStatus } from '@/types';
+import { Reservation, ReservationStatus } from '@/types';
 import ViewSelector from '@/components/reservations/ViewSelector';
 import ListView from '@/components/reservations/ListView';
 import CalendarView from '@/components/reservations/CalendarView';
@@ -28,7 +28,7 @@ const Reservations: React.FC = () => {
     return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   };
 
-  const updateStatus = (reservation: ReservationStatus extends infer R ? { status: R } & Record<string, any> : never, newStatus: ReservationStatus) => {
+  const updateStatus = (reservation: Reservation, newStatus: ReservationStatus) => {
     const updatedReservation = {
       ...reservation,
       status: newStatus
