@@ -16,12 +16,11 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { MoreVertical, Mail, Phone, Package } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { MoreVertical, Mail, Phone } from 'lucide-react';
 import { Supplier } from '@/types';
 
 // Mock data for demonstration
-const mockVendors: Supplier[] = [
+const mockSuppliers: Supplier[] = [
   {
     id: 'supplier-1',
     name: 'Italian Imports Co.',
@@ -54,40 +53,19 @@ const mockVendors: Supplier[] = [
     productsSupplied: ['Organic Vegetables', 'Fresh Herbs', 'Specialty Mushrooms'],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'supplier-4',
-    name: 'Seafood Direct',
-    contactPerson: 'James Wilson',
-    phone: '+1 (555) 789-0123',
-    email: 'james@seafooddirect.com',
-    address: '321 Harbor Drive, San Francisco, CA 94105',
-    productsSupplied: ['Fresh Fish', 'Shellfish', 'Specialty Seafood'],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'supplier-5',
-    name: 'Artisanal Bakery',
-    contactPerson: 'Emma Thompson',
-    phone: '+1 (555) 234-5678',
-    email: 'emma@artisanalbakery.com',
-    address: '567 Dough Street, Oakland, CA 94607',
-    productsSupplied: ['Sourdough Bread', 'Pastries', 'Specialty Desserts'],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
   }
 ];
 
 interface VendorsListProps {
   searchQuery: string;
+  onSelectVendor?: (vendorId: string) => void;
 }
 
-const VendorsList: React.FC<VendorsListProps> = ({ searchQuery }) => {
-  const filteredVendors = mockVendors.filter(vendor => 
-    vendor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    vendor.contactPerson.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    vendor.productsSupplied.some(product => 
+const VendorsList: React.FC<VendorsListProps> = ({ searchQuery, onSelectVendor }) => {
+  const filteredSuppliers = mockSuppliers.filter(supplier => 
+    supplier.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    supplier.contactPerson.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    supplier.productsSupplied.some(product => 
       product.toLowerCase().includes(searchQuery.toLowerCase())
     )
   );
@@ -106,49 +84,47 @@ const VendorsList: React.FC<VendorsListProps> = ({ searchQuery }) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredVendors.length > 0 ? (
-              filteredVendors.map((vendor) => (
-                <TableRow key={vendor.id}>
-                  <TableCell className="font-medium">{vendor.name}</TableCell>
-                  <TableCell>{vendor.contactPerson}</TableCell>
+            {filteredSuppliers.length > 0 ? (
+              filteredSuppliers.map((supplier) => (
+                <TableRow key={supplier.id} className="cursor-pointer hover:bg-muted/80" onClick={() => onSelectVendor?.(supplier.id)}>
+                  <TableCell className="font-medium">{supplier.name}</TableCell>
+                  <TableCell>{supplier.contactPerson}</TableCell>
                   <TableCell>
                     <div className="flex flex-col space-y-1">
                       <div className="flex items-center space-x-2">
                         <Mail className="h-4 w-4 text-muted-foreground" />
-                        <span>{vendor.email}</span>
+                        <span>{supplier.email}</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Phone className="h-4 w-4 text-muted-foreground" />
-                        <span>{vendor.phone}</span>
+                        <span>{supplier.phone}</span>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {vendor.productsSupplied.map((product, index) => (
-                        <Badge 
+                      {supplier.productsSupplied.map((product, index) => (
+                        <span 
                           key={index} 
-                          variant="outline"
-                          className="flex items-center gap-1"
+                          className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold"
                         >
-                          <Package className="h-3 w-3" />
                           {product}
-                        </Badge>
+                        </span>
                       ))}
                     </div>
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
+                        <Button variant="ghost" className="h-8 w-8 p-0" onClick={(e) => e.stopPropagation()}>
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>View Details</DropdownMenuItem>
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
-                        <DropdownMenuItem>Create Purchase Order</DropdownMenuItem>
-                        <DropdownMenuItem>View Order History</DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onSelectVendor?.(supplier.id); }}>View Dashboard</DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => e.stopPropagation()}>Edit</DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => e.stopPropagation()}>Create Purchase Order</DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => e.stopPropagation()}>View Order History</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
