@@ -5,6 +5,7 @@ import InvoiceMetrics from '@/components/invoices/InvoiceMetrics';
 import InvoicesTable from '@/components/invoices/InvoicesTable';
 import InvoiceFilterBar from '@/components/invoices/InvoiceFilterBar';
 import AddInvoiceDialog from '@/components/invoices/AddInvoiceDialog';
+import InvoiceDetailView from '@/components/invoices/InvoiceDetailView';
 import { mockInvoices } from '@/data/invoicesData';
 import { Invoice, InvoiceStatus, InvoiceCategory } from '@/types';
 
@@ -12,6 +13,8 @@ const FinancialHub: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState<InvoiceCategory | 'all'>('all');
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [isDetailViewOpen, setIsDetailViewOpen] = useState(false);
 
   // Apply filters
   const filteredInvoices = mockInvoices.filter((invoice) => {
@@ -31,6 +34,15 @@ const FinancialHub: React.FC = () => {
   });
 
   const isFiltered = searchQuery !== '' || statusFilter !== 'all' || categoryFilter !== 'all';
+
+  const handleInvoiceClick = (invoice: Invoice) => {
+    setSelectedInvoice(invoice);
+    setIsDetailViewOpen(true);
+  };
+
+  const closeDetailView = () => {
+    setIsDetailViewOpen(false);
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -62,7 +74,18 @@ const FinancialHub: React.FC = () => {
       />
 
       {/* Invoices Table */}
-      <InvoicesTable invoices={filteredInvoices} isFiltered={isFiltered} />
+      <InvoicesTable 
+        invoices={filteredInvoices} 
+        isFiltered={isFiltered}
+        onInvoiceClick={handleInvoiceClick}
+      />
+
+      {/* Invoice Detail View */}
+      <InvoiceDetailView 
+        invoice={selectedInvoice}
+        isOpen={isDetailViewOpen}
+        onClose={closeDetailView}
+      />
     </div>
   );
 };
