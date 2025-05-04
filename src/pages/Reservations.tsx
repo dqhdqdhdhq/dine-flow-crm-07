@@ -29,7 +29,8 @@ const Reservations: React.FC = () => {
   };
 
   const updateStatus = (reservation: Reservation, newStatus: ReservationStatus) => {
-    const updatedReservation = {
+    // Create a full updated reservation object with the new status
+    const updatedReservation: Reservation = {
       ...reservation,
       status: newStatus
     };
