@@ -1,3 +1,4 @@
+
 export interface InventoryItem {
   id: string;
   name: string;
@@ -55,38 +56,4 @@ export interface Supplier {
   status: 'active' | 'inactive' | 'pending';
   createdAt: string;
   updatedAt: string;
-}
-
-export type ReservationStatus = 'pending' | 'confirmed' | 'seated' | 'completed' | 'cancelled' | 'no-show';
-
-export interface Reservation {
-  id: string;
-  customerName: string;
-  customerId: string;
-  date: string;
-  time: string;
-  partySize: number;
-  tableIds: string[];
-  status: ReservationStatus;
-  notes: string;
-  specialRequests: string;
-  createdAt: string;
-  updatedAt: string;
-  phone?: string;
-  email?: string;
-}
-
-export type TableStatus = 'available' | 'occupied' | 'reserved' | 'unavailable';
-
-export interface Table {
-  id: string;
-  number: string;
-  capacity: number;
-  status: TableStatus;
-  section: string;
-  shape: 'round' | 'square' | 'rectangle';
-  position?: {
-    x: number;
-    y: number;
-  };
 }
