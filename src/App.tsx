@@ -16,6 +16,7 @@ import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Inventory from "./pages/Inventory";
 import Vendors from "./pages/Vendors";
+import FinancialHub from "./pages/FinancialHub";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/notes" element={<MainLayout><Notes /></MainLayout>} />
             <Route path="/feedback" element={<MainLayout><FeedbackPage /></MainLayout>} />
             <Route path="/reports" element={<MainLayout><Reports /></MainLayout>} />
+            <Route path="/financial-hub" element={<MainLayout><FinancialHub /></MainLayout>} />
             <Route path="/settings" element={<MainLayout><Settings /></MainLayout>} />
             <Route path="*" element={<NotFound />} />
           </Routes>

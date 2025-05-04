@@ -1,4 +1,3 @@
-
 export interface Customer {
   id: string;
   firstName: string;
@@ -144,6 +143,27 @@ export interface PurchaseOrder {
   notes: string;
   receivedBy?: string;
   receivedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type InvoiceStatus = 'pending-approval' | 'approved' | 'paid' | 'partially-paid' | 'disputed' | 'cancelled' | 'overdue';
+
+export type InvoiceCategory = 'food-supplies' | 'utilities' | 'rent' | 'marketing' | 'maintenance' | 'payroll' | 'other';
+
+export interface Invoice {
+  id: string;
+  invoiceNumber: string;
+  vendorId: string;
+  vendorName: string;
+  category: InvoiceCategory;
+  issueDate: string;
+  dueDate: string;
+  amount: number;
+  status: InvoiceStatus;
+  paymentDate?: string;
+  fileUrl?: string;
+  notes?: string;
   createdAt: string;
   updatedAt: string;
 }

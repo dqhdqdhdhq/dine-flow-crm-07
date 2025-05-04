@@ -1,7 +1,17 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Calendar, FileText, MessageSquare, BarChart2, Settings, Store } from 'lucide-react';
+import { 
+  LayoutDashboard, 
+  Users, 
+  Calendar, 
+  FileText, 
+  MessageSquare, 
+  BarChart2, 
+  Settings, 
+  Store, 
+  DollarSign 
+} from 'lucide-react';
 import {
   Sidebar as SidebarBase,
   SidebarContent,
@@ -15,6 +25,9 @@ import {
   SidebarTrigger,
   SidebarFooter,
 } from '@/components/ui/sidebar';
+
+// Mock admin state for demonstration
+const isAdmin = true;
 
 const navigationItems = [
   {
@@ -54,6 +67,15 @@ const navigationItems = [
   },
 ];
 
+// Admin-only navigation items
+const adminNavigationItems = [
+  {
+    title: 'Financial Hub',
+    icon: DollarSign,
+    path: '/financial-hub'
+  }
+];
+
 const Sidebar: React.FC = () => {
   const location = useLocation();
   
@@ -86,6 +108,26 @@ const Sidebar: React.FC = () => {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        
+        {isAdmin && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Administration</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {adminNavigationItems.map((item) => (
+                  <SidebarMenuItem key={item.path}>
+                    <SidebarMenuButton asChild isActive={location.pathname === item.path}>
+                      <Link to={item.path}>
+                        <item.icon className="h-5 w-5" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
