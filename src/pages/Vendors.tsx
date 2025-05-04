@@ -16,7 +16,12 @@ import VendorsList from '@/components/vendors/VendorsList';
 import VendorDashboard from '@/components/vendors/VendorDashboard';
 import VendorCalendar from '@/components/vendors/VendorCalendar';
 import VendorTimeline from '@/components/vendors/VendorTimeline';
+import AddVendorDialog from '@/components/vendors/AddVendorDialog';
+import AddPurchaseOrderDialog from '@/components/vendors/AddPurchaseOrderDialog';
 import { Badge } from '@/components/ui/badge';
+import { mockSuppliers, mockPurchaseOrders } from '@/data/vendorsData';
+import { Supplier, PurchaseOrder } from '@/types';
+import { toast } from 'sonner';
 
 const Vendors: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -28,6 +33,14 @@ const Vendors: React.FC = () => {
     contactInfo: true,
     productsSupplied: true,
   });
+  
+  // State for sample data
+  const [suppliers, setSuppliers] = useState<Supplier[]>(mockSuppliers);
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(mockPurchaseOrders);
+  
+  // Dialog states
+  const [addVendorDialogOpen, setAddVendorDialogOpen] = useState(false);
+  const [addPurchaseOrderDialogOpen, setAddPurchaseOrderDialogOpen] = useState(false);
 
   // Status filter options for vendors
   const handleStatusFilterChange = (status: string) => {
@@ -45,17 +58,29 @@ const Vendors: React.FC = () => {
       [column]: !prev[column]
     }));
   };
+  
+  // Handle adding a new vendor
+  const handleAddVendor = (newVendor: Supplier) => {
+    setSuppliers(prev => [newVendor, ...prev]);
+    toast.success(`Vendor ${newVendor.name} added successfully`);
+  };
+  
+  // Handle adding a new purchase order
+  const handleAddPurchaseOrder = (newOrder: PurchaseOrder) => {
+    setPurchaseOrders(prev => [newOrder, ...prev]);
+    toast.success(`Purchase order for ${newOrder.supplierName} created successfully`);
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-3xl font-bold tracking-tight">Vendors</h1>
         <div className="flex gap-2">
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => setAddVendorDialogOpen(true)}>
             <Plus className="h-4 w-4" />
             Add Vendor
           </Button>
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2" onClick={() => setAddPurchaseOrderDialogOpen(true)}>
             <FileText className="h-4 w-4" />
             New Purchase Order
           </Button>
@@ -179,21 +204,44 @@ const Vendors: React.FC = () => {
             onSelectVendor={(vendorId) => setSelectedVendor(vendorId)}
             statusFilter={statusFilter}
             visibleColumns={visibleColumns}
+            suppliers={suppliers}
           />
         </TabsContent>
 
         <TabsContent value="dashboard">
-          <VendorDashboard vendorId={selectedVendor} />
+          <VendorDashboard 
+            vendorId={selectedVendor} 
+            purchaseOrders={purchaseOrders}
+            suppliers={suppliers}
+          />
         </TabsContent>
 
         <TabsContent value="calendar">
-          <VendorCalendar />
+          <VendorCalendar purchaseOrders={purchaseOrders} />
         </TabsContent>
 
         <TabsContent value="timeline">
-          <VendorTimeline vendorId={selectedVendor} />
+          <VendorTimeline 
+            vendorId={selectedVendor} 
+            purchaseOrders={purchaseOrders}
+            suppliers={suppliers}
+          />
         </TabsContent>
       </Tabs>
+      
+      {/* Dialogs */}
+      <AddVendorDialog 
+        open={addVendorDialogOpen} 
+        onOpenChange={setAddVendorDialogOpen}
+        onVendorAdded={handleAddVendor}
+      />
+      
+      <AddPurchaseOrderDialog 
+        open={addPurchaseOrderDialogOpen}
+        onOpenChange={setAddPurchaseOrderDialogOpen}
+        suppliers={suppliers}
+        onOrderAdded={handleAddPurchaseOrder}
+      />
     </div>
   );
 };

@@ -20,58 +20,6 @@ import {
 import { MoreVertical, Mail, Phone, Check, AlertTriangle, Clock } from 'lucide-react';
 import { Supplier } from '@/types';
 
-// Mock data for demonstration
-const mockSuppliers: Supplier[] = [
-  {
-    id: 'supplier-1',
-    name: 'Italian Imports Co.',
-    contactPerson: 'Marco Rossi',
-    phone: '+1 (555) 123-4567',
-    email: 'marco@italianimports.com',
-    address: '123 Cheese Lane, San Francisco, CA 94110',
-    productsSupplied: ['Parmigiano Reggiano', 'Truffle Oil', 'Balsamic Vinegar'],
-    status: 'active',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'supplier-2',
-    name: 'Premium Wines',
-    contactPerson: 'Sophia Laurent',
-    phone: '+1 (555) 987-6543',
-    email: 'sophia@premiumwines.com',
-    address: '456 Vineyard Road, Napa Valley, CA 94558',
-    productsSupplied: ['Cabernet Sauvignon', 'Pinot Noir', 'Chardonnay'],
-    status: 'active',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'supplier-3',
-    name: 'Local Produce',
-    contactPerson: 'David Kim',
-    phone: '+1 (555) 456-7890',
-    email: 'david@localproduce.com',
-    address: '789 Farm Road, Berkeley, CA 94710',
-    productsSupplied: ['Organic Vegetables', 'Fresh Herbs', 'Specialty Mushrooms'],
-    status: 'pending',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'supplier-4',
-    name: 'Seafood Direct',
-    contactPerson: 'Emily Chen',
-    phone: '+1 (555) 222-3333',
-    email: 'emily@seafooddirect.com',
-    address: '101 Harbor Drive, San Francisco, CA 94111',
-    productsSupplied: ['Fresh Salmon', 'Oysters', 'Scallops'],
-    status: 'inactive',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }
-];
-
 interface VisibleColumns {
   name: boolean;
   contactPerson: boolean;
@@ -84,15 +32,17 @@ interface VendorsListProps {
   statusFilter?: string[];
   visibleColumns?: VisibleColumns;
   onSelectVendor?: (vendorId: string) => void;
+  suppliers: Supplier[];
 }
 
 const VendorsList: React.FC<VendorsListProps> = ({ 
   searchQuery, 
   statusFilter = [], 
   visibleColumns = { name: true, contactPerson: true, contactInfo: true, productsSupplied: true },
-  onSelectVendor 
+  onSelectVendor,
+  suppliers 
 }) => {
-  const filteredSuppliers = mockSuppliers.filter(supplier => {
+  const filteredSuppliers = suppliers.filter(supplier => {
     // Apply text search filter
     const matchesSearch = 
       supplier.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -107,7 +57,7 @@ const VendorsList: React.FC<VendorsListProps> = ({
     return matchesSearch && matchesStatus;
   });
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string = 'active') => {
     switch (status) {
       case 'active':
         return <Badge variant="success" className="flex items-center gap-1"><Check className="h-3 w-3" />Active</Badge>;
@@ -175,7 +125,7 @@ const VendorsList: React.FC<VendorsListProps> = ({
                     </TableCell>
                   )}
                   
-                  <TableCell>{getStatusBadge(supplier.status || 'active')}</TableCell>
+                  <TableCell>{getStatusBadge(supplier.status)}</TableCell>
                   
                   <TableCell>
                     <DropdownMenu>

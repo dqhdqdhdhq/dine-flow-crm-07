@@ -4,101 +4,19 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { Mail, Phone, MapPin, Package, Calendar, Clock, DollarSign } from 'lucide-react';
-import { PurchaseOrder } from '@/types';
-
-// Mock data
-const mockPurchaseOrders: PurchaseOrder[] = [
-  {
-    id: '1',
-    supplierId: 'supplier-1',
-    supplierName: 'Italian Imports Co.',
-    status: 'ordered',
-    orderDate: new Date().toISOString(),
-    expectedDeliveryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-    items: [
-      {
-        id: 'item-1',
-        inventoryItemId: '1',
-        name: 'Parmigiano Reggiano',
-        quantity: 10,
-        unit: 'kg',
-        unitPrice: 28.5,
-        receivedQuantity: 0,
-        notes: ''
-      },
-      {
-        id: 'item-2',
-        inventoryItemId: '3',
-        name: 'Truffle Oil',
-        quantity: 5,
-        unit: 'bottle',
-        unitPrice: 18.75,
-        receivedQuantity: 0,
-        notes: ''
-      }
-    ],
-    totalAmount: 285 + 93.75,
-    notes: 'Regular monthly order',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: '4',
-    supplierId: 'supplier-1',
-    supplierName: 'Italian Imports Co.',
-    status: 'received',
-    orderDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-    expectedDeliveryDate: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
-    items: [
-      {
-        id: 'item-5',
-        inventoryItemId: '1',
-        name: 'Parmigiano Reggiano',
-        quantity: 8,
-        unit: 'kg',
-        unitPrice: 28.5,
-        receivedQuantity: 8,
-        notes: ''
-      }
-    ],
-    totalAmount: 8 * 28.5,
-    notes: '',
-    receivedBy: 'Jane Smith',
-    receivedAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }
-];
-
-const mockSupplier = {
-  id: 'supplier-1',
-  name: 'Italian Imports Co.',
-  contactPerson: 'Marco Rossi',
-  phone: '+1 (555) 123-4567',
-  email: 'marco@italianimports.com',
-  address: '123 Cheese Lane, San Francisco, CA 94110',
-  productsSupplied: ['Parmigiano Reggiano', 'Truffle Oil', 'Balsamic Vinegar'],
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString()
-};
-
-const frequentItems = [
-  { name: 'Parmigiano Reggiano', totalOrdered: 18, averageCost: 28.5 },
-  { name: 'Truffle Oil', totalOrdered: 5, averageCost: 18.75 },
-  { name: 'Balsamic Vinegar', totalOrdered: 3, averageCost: 22.50 },
-];
-
-const spendingData = {
-  thisMonth: 378.75,
-  thisYear: 2845.50,
-  allTime: 5230.25,
-};
+import { PurchaseOrder, Supplier } from '@/types';
 
 interface VendorDashboardProps {
   vendorId: string | null;
+  purchaseOrders: PurchaseOrder[];
+  suppliers: Supplier[];
 }
 
-const VendorDashboard: React.FC<VendorDashboardProps> = ({ vendorId }) => {
+const VendorDashboard: React.FC<VendorDashboardProps> = ({ 
+  vendorId,
+  purchaseOrders,
+  suppliers 
+}) => {
   if (!vendorId) {
     return (
       <div className="flex items-center justify-center h-64 bg-muted/30 rounded-lg">
@@ -107,18 +25,39 @@ const VendorDashboard: React.FC<VendorDashboardProps> = ({ vendorId }) => {
     );
   }
 
+  // Find the selected supplier
+  const selectedSupplier = suppliers.find(s => s.id === vendorId);
+  
+  if (!selectedSupplier) {
+    return (
+      <div className="flex items-center justify-center h-64 bg-muted/30 rounded-lg">
+        <p className="text-muted-foreground">Vendor not found</p>
+      </div>
+    );
+  }
+
   // Filter orders for this supplier
-  const supplierOrders = mockPurchaseOrders.filter(order => order.supplierId === vendorId);
+  const supplierOrders = purchaseOrders.filter(order => order.supplierId === vendorId);
   const upcomingDeliveries = supplierOrders.filter(order => 
     order.status === 'ordered' || order.status === 'shipped'
   );
+
+  // Calculate spending data
+  const spendingData = {
+    thisMonth: calculateSpending(supplierOrders, 30),
+    thisYear: calculateSpending(supplierOrders, 365),
+    allTime: calculateSpending(supplierOrders, Infinity),
+  };
+
+  // Get frequently ordered items
+  const frequentItems = getFrequentlyOrderedItems(supplierOrders);
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="col-span-1 md:col-span-2">
           <CardHeader>
-            <CardTitle className="text-2xl">{mockSupplier.name}</CardTitle>
+            <CardTitle className="text-2xl">{selectedSupplier.name}</CardTitle>
             <CardDescription>Vendor Profile</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -128,14 +67,14 @@ const VendorDashboard: React.FC<VendorDashboardProps> = ({ vendorId }) => {
                   <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
                     <p className="font-medium">Email</p>
-                    <p className="text-muted-foreground">{mockSupplier.email}</p>
+                    <p className="text-muted-foreground">{selectedSupplier.email}</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-2">
                   <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
                     <p className="font-medium">Phone</p>
-                    <p className="text-muted-foreground">{mockSupplier.phone}</p>
+                    <p className="text-muted-foreground">{selectedSupplier.phone}</p>
                   </div>
                 </div>
               </div>
@@ -144,7 +83,7 @@ const VendorDashboard: React.FC<VendorDashboardProps> = ({ vendorId }) => {
                   <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
                     <p className="font-medium">Address</p>
-                    <p className="text-muted-foreground">{mockSupplier.address}</p>
+                    <p className="text-muted-foreground">{selectedSupplier.address}</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-2">
@@ -152,7 +91,7 @@ const VendorDashboard: React.FC<VendorDashboardProps> = ({ vendorId }) => {
                   <div>
                     <p className="font-medium">Products Supplied</p>
                     <div className="flex flex-wrap gap-1 mt-1">
-                      {mockSupplier.productsSupplied.map((product, index) => (
+                      {selectedSupplier.productsSupplied.map((product, index) => (
                         <Badge key={index} variant="secondary">{product}</Badge>
                       ))}
                     </div>
@@ -202,7 +141,7 @@ const VendorDashboard: React.FC<VendorDashboardProps> = ({ vendorId }) => {
                       <h4 className="font-medium">PO-{order.id}</h4>
                       <div className="text-sm text-muted-foreground flex items-center">
                         <Calendar className="h-3 w-3 mr-1" />
-                        {format(new Date(order.expectedDeliveryDate), 'MMM d, yyyy')}
+                        {format(new Date(order.expectedDeliveryDate), "MMM d, yyyy")}
                       </div>
                       <div className="text-sm text-muted-foreground mt-1">
                         {order.items.length} items, ${order.totalAmount.toFixed(2)}
@@ -226,20 +165,24 @@ const VendorDashboard: React.FC<VendorDashboardProps> = ({ vendorId }) => {
             <CardDescription>Most common products from this vendor</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {frequentItems.map((item, index) => (
-                <div key={index} className="flex items-center justify-between border-b pb-3">
-                  <div>
-                    <h4 className="font-medium">{item.name}</h4>
-                    <p className="text-sm text-muted-foreground">Total ordered: {item.totalOrdered}</p>
+            {frequentItems.length > 0 ? (
+              <div className="space-y-3">
+                {frequentItems.map((item, index) => (
+                  <div key={index} className="flex items-center justify-between border-b pb-3">
+                    <div>
+                      <h4 className="font-medium">{item.name}</h4>
+                      <p className="text-sm text-muted-foreground">Total ordered: {item.totalOrdered}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium">${item.averageCost.toFixed(2)}</p>
+                      <p className="text-xs text-muted-foreground">per unit</p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-medium">${item.averageCost.toFixed(2)}</p>
-                    <p className="text-xs text-muted-foreground">per unit</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-4">No order history</p>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -298,5 +241,46 @@ const VendorDashboard: React.FC<VendorDashboardProps> = ({ vendorId }) => {
     </div>
   );
 };
+
+// Helper function to calculate spending for different time periods
+function calculateSpending(orders: PurchaseOrder[], daysPeriod: number): number {
+  const now = new Date();
+  const startDate = new Date();
+  startDate.setDate(now.getDate() - daysPeriod);
+  
+  return orders
+    .filter(order => {
+      const orderDate = new Date(order.orderDate);
+      return daysPeriod === Infinity || orderDate >= startDate;
+    })
+    .reduce((total, order) => total + order.totalAmount, 0);
+}
+
+// Helper function to get frequently ordered items
+function getFrequentlyOrderedItems(orders: PurchaseOrder[]): { name: string; totalOrdered: number; averageCost: number }[] {
+  const itemsMap: Record<string, { totalQuantity: number; totalCost: number; count: number }> = {};
+  
+  // Collect data for each item
+  orders.forEach(order => {
+    order.items.forEach(item => {
+      if (!itemsMap[item.name]) {
+        itemsMap[item.name] = { totalQuantity: 0, totalCost: 0, count: 0 };
+      }
+      itemsMap[item.name].totalQuantity += item.quantity;
+      itemsMap[item.name].totalCost += item.quantity * item.unitPrice;
+      itemsMap[item.name].count += 1;
+    });
+  });
+  
+  // Transform to array and sort by total quantity
+  return Object.entries(itemsMap)
+    .map(([name, data]) => ({
+      name,
+      totalOrdered: data.totalQuantity,
+      averageCost: data.totalCost / data.totalQuantity
+    }))
+    .sort((a, b) => b.totalOrdered - a.totalOrdered)
+    .slice(0, 5); // Get top 5 most frequent items
+}
 
 export default VendorDashboard;
