@@ -21,7 +21,7 @@ export interface Customer {
   notes: string;
   preferences: string[];
   vip: boolean;
-  tags?: string[]; // Added missing field
+  tags?: string[];
   allergies?: string[];
   loyaltyPoints?: number;
   createdAt?: string;
@@ -75,7 +75,7 @@ export interface Table {
   capacity: number;
   status: 'available' | 'occupied' | 'reserved' | 'unavailable';
   section: 'main' | 'bar' | 'outdoor' | 'private';
-  location: string; // Added missing field
+  location: string; // Added this field to fix errors
   position?: {
     x: number;
     y: number;
@@ -96,6 +96,11 @@ export interface InventoryItem {
   reorderQuantity: number;
   supplierId: string;
   notes: string;
+  defaultSupplierId?: string; // Added for backward compatibility
+  defaultSupplierName?: string; // Added for backward compatibility
+  currentStock?: number; // Added for backward compatibility
+  lowStockThreshold?: number; // Added for backward compatibility
+  cost?: number; // Added for backward compatibility
   createdAt: string;
   updatedAt: string;
 }
@@ -143,8 +148,8 @@ export interface Supplier {
 }
 
 // Invoice-related types
-export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
-export type InvoiceCategory = 'food' | 'beverage' | 'equipment' | 'maintenance' | 'utilities' | 'rent' | 'other';
+export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'pending-approval' | 'approved' | 'partially-paid';
+export type InvoiceCategory = 'food' | 'beverage' | 'equipment' | 'maintenance' | 'utilities' | 'rent' | 'other' | 'food-supplies' | 'marketing' | 'payroll';
 
 export interface Invoice {
   id: string;
@@ -158,6 +163,8 @@ export interface Invoice {
   amount: number;
   taxAmount: number;
   totalAmount: number;
+  paymentDate?: string; // Added field
+  fileUrl?: string; // Added field
   notes?: string;
   attachments?: string[];
   createdAt: string;
@@ -165,25 +172,54 @@ export interface Invoice {
 }
 
 // Event-related types
-export type EventType = 'wedding' | 'corporate' | 'birthday' | 'anniversary' | 'holiday' | 'other';
-export type EventStatus = 'upcoming' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
+export type EventType = 'private-party' | 'public-ticketed' | 'holiday-special' | 'live-music' | 'corporate' | 'other';
+export type EventStatus = 'planning' | 'confirmed' | 'ongoing' | 'completed' | 'cancelled';
 
 export interface Event {
   id: string;
-  title: string;
+  name: string;
   type: EventType;
   status: EventStatus;
   startDate: string;
   endDate: string;
-  location: string;
+  startTime: string;
+  endTime: string;
+  isMultiDay: boolean;
+  capacity: number;
+  bookedCount: number;
+  locationDetails: string;
   description?: string;
-  contactName: string;
+  publicDescription?: string;
+  contactName?: string;
   contactEmail?: string;
   contactPhone?: string;
-  attendeeCount: number;
-  tasks?: EventTask[];
-  guests?: EventGuest[];
-  notes?: string;
+  menu?: {
+    id: string;
+    name: string;
+    description: string;
+    items: Array<{
+      name: string;
+      description: string;
+      price: number;
+    }>;
+  };
+  resources: Array<{
+    id: string;
+    name: string;
+    type: string;
+    quantity: number;
+    notes?: string;
+  }>;
+  staffingRequirements?: Array<{
+    role: string;
+    count: number;
+    assignedStaff?: string[];
+  }>;
+  minimumSpend?: number;
+  ticketPrice?: number;
+  ticketSalesStart?: string;
+  ticketSalesEnd?: string;
+  createdBy: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -194,19 +230,26 @@ export interface EventTask {
   title: string;
   description?: string;
   assignedTo?: string;
-  dueDate?: string;
-  isCompleted: boolean;
+  assignedToName?: string; // Added to fix error
+  dueDate: string;
+  status: 'pending' | 'completed' | 'overdue'; // Added status field
+  completedAt?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface EventGuest {
   id: string;
   eventId: string;
+  customerId?: string;
   name: string;
   email?: string;
   phone?: string;
-  status: 'invited' | 'confirmed' | 'declined' | 'cancelled';
+  status: 'invited' | 'confirmed' | 'declined' | 'cancelled' | 'checked-in'; // Added checked-in status
+  attendees: number; // Added attendees field
   notes?: string;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 // Note-related types
