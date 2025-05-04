@@ -57,9 +57,9 @@ const navigationItems = [
     path: '/notes'
   },
   {
-    title: 'Feedback',
+    title: 'Guest Experience',
     icon: MessageSquare,
-    path: '/feedback'
+    path: '/feedback-hub'
   },
   {
     title: 'Vendors',

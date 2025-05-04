@@ -12,6 +12,7 @@ import CustomerProfile from "./pages/CustomerProfile";
 import Reservations from "./pages/Reservations";
 import Notes from "./pages/Notes";
 import FeedbackPage from "./pages/Feedback";
+import FeedbackHub from "./pages/FeedbackHub";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Inventory from "./pages/Inventory";
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/vendors" element={<MainLayout><Vendors /></MainLayout>} />
             <Route path="/notes" element={<MainLayout><Notes /></MainLayout>} />
             <Route path="/feedback" element={<MainLayout><FeedbackPage /></MainLayout>} />
+            <Route path="/feedback-hub" element={<MainLayout><FeedbackHub /></MainLayout>} />
             <Route path="/reports" element={<MainLayout><Reports /></MainLayout>} />
             <Route path="/events" element={<MainLayout><EventCommandCenter /></MainLayout>} />
             <Route path="/financial-hub" element={<MainLayout><FinancialHub /></MainLayout>} />
