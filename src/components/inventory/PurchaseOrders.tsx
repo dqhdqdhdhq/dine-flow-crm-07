@@ -131,7 +131,7 @@ const PurchaseOrders: React.FC<PurchaseOrdersProps> = ({ searchQuery }) => {
       case 'ordered':
         return <Badge variant="secondary">Ordered</Badge>;
       case 'shipped':
-        return <Badge variant="primary">Shipped</Badge>;
+        return <Badge variant="default">Shipped</Badge>; // Changed from "primary" to "default"
       case 'partially-received':
         return <Badge variant="warning">Partially Received</Badge>;
       case 'received':
