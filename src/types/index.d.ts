@@ -57,3 +57,34 @@ export interface Supplier {
   createdAt: string;
   updatedAt: string;
 }
+
+export type ReservationStatus = 'pending' | 'confirmed' | 'seated' | 'completed' | 'cancelled' | 'no-show';
+
+export interface Reservation {
+  id: string;
+  customerName: string;
+  date: string;
+  time: string;
+  partySize: number;
+  phone?: string;
+  email?: string;
+  notes?: string;
+  status: ReservationStatus;
+  tableIds: string[];
+  createdAt: string;
+}
+
+export type TableStatus = 'available' | 'occupied' | 'reserved' | 'unavailable';
+
+export interface Table {
+  id: string;
+  number: string;
+  capacity: number;
+  status: TableStatus;
+  section: string;
+  shape: 'round' | 'square' | 'rectangle';
+  position?: {
+    x: number;
+    y: number;
+  };
+}
