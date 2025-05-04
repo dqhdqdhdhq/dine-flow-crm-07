@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   Tabs, 
@@ -842,3 +843,145 @@ const Settings = () => {
                           <table className="min-w-full divide-y divide-border">
                             <thead className="bg-muted">
                               <tr>
+                                <th className="px-4 py-2 text-left">Date</th>
+                                <th className="px-4 py-2 text-left">Description</th>
+                                <th className="px-4 py-2 text-left">Amount</th>
+                                <th className="px-4 py-2 text-left">Status</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border">
+                              <tr>
+                                <td className="px-4 py-2">2024-05-01</td>
+                                <td className="px-4 py-2">Premium Plan - Monthly</td>
+                                <td className="px-4 py-2">$49.00</td>
+                                <td className="px-4 py-2"><Badge>Paid</Badge></td>
+                              </tr>
+                              <tr>
+                                <td className="px-4 py-2">2024-04-01</td>
+                                <td className="px-4 py-2">Premium Plan - Monthly</td>
+                                <td className="px-4 py-2">$49.00</td>
+                                <td className="px-4 py-2"><Badge>Paid</Badge></td>
+                              </tr>
+                              <tr>
+                                <td className="px-4 py-2">2024-03-01</td>
+                                <td className="px-4 py-2">Premium Plan - Monthly</td>
+                                <td className="px-4 py-2">$49.00</td>
+                                <td className="px-4 py-2"><Badge>Paid</Badge></td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </section>
+              
+              {/* Security Section */}
+              <section id="security" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Security Settings</CardTitle>
+                    <CardDescription>
+                      Manage your security preferences
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium">Password Requirements</h4>
+                          <p className="text-sm text-muted-foreground">
+                            Minimum length: {securitySettings.passwordMinLength} characters
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Label htmlFor="min-length" className="mr-2">Minimum Length:</Label>
+                          <Select 
+                            defaultValue={securitySettings.passwordMinLength.toString()}
+                            onValueChange={(value) => setSecuritySettings({...securitySettings, passwordMinLength: parseInt(value)})}
+                          >
+                            <SelectTrigger id="min-length" className="w-[80px]">
+                              <SelectValue placeholder="Length" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="6">6</SelectItem>
+                              <SelectItem value="8">8</SelectItem>
+                              <SelectItem value="10">10</SelectItem>
+                              <SelectItem value="12">12</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium">Password Complexity</h4>
+                          <p className="text-sm text-muted-foreground">
+                            Require special characters, numbers and mixed case
+                          </p>
+                        </div>
+                        <Switch 
+                          checked={securitySettings.requirePasswordComplexity} 
+                          onCheckedChange={(checked) => setSecuritySettings({...securitySettings, requirePasswordComplexity: checked})}
+                        />
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium">Two-Factor Authentication</h4>
+                          <p className="text-sm text-muted-foreground">
+                            Add an extra layer of security to your account
+                          </p>
+                        </div>
+                        <Switch 
+                          checked={securitySettings.enableTwoFactorAuth} 
+                          onCheckedChange={(checked) => setSecuritySettings({...securitySettings, enableTwoFactorAuth: checked})}
+                        />
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium">Session Timeout</h4>
+                          <p className="text-sm text-muted-foreground">
+                            Automatically log out after inactivity
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Label htmlFor="session-timeout" className="mr-2">Minutes:</Label>
+                          <Select 
+                            defaultValue={securitySettings.sessionTimeout.toString()}
+                            onValueChange={(value) => setSecuritySettings({...securitySettings, sessionTimeout: parseInt(value)})}
+                          >
+                            <SelectTrigger id="session-timeout" className="w-[80px]">
+                              <SelectValue placeholder="Minutes" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="15">15</SelectItem>
+                              <SelectItem value="30">30</SelectItem>
+                              <SelectItem value="60">60</SelectItem>
+                              <SelectItem value="120">120</SelectItem>
+                              <SelectItem value="240">240</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-6 flex justify-end">
+                        <Button onClick={() => toast.success('Security settings updated successfully!')}>
+                          Save Changes
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </section>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Settings;
