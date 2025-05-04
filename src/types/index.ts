@@ -1,4 +1,3 @@
-
 export interface Customer {
   id: string;
   firstName: string;
@@ -90,4 +89,59 @@ export interface User {
   email: string;
   role: 'admin' | 'manager' | 'staff';
   avatarUrl?: string;
+}
+
+export interface Supplier {
+  id: string;
+  name: string;
+  contactPerson: string;
+  phone: string;
+  email: string;
+  address: string;
+  productsSupplied: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type OrderStatus = 'draft' | 'ordered' | 'shipped' | 'partially-received' | 'received' | 'cancelled';
+
+export interface InventoryItem {
+  id: string;
+  name: string;
+  description: string;
+  unit: string; // e.g., kg, bottle, case
+  defaultSupplierId: string;
+  defaultSupplierName: string;
+  cost: number;
+  currentStock: number;
+  lowStockThreshold: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PurchaseOrderItem {
+  id: string;
+  inventoryItemId: string;
+  name: string;
+  quantity: number;
+  unit: string;
+  unitPrice: number;
+  receivedQuantity: number;
+  notes: string;
+}
+
+export interface PurchaseOrder {
+  id: string;
+  supplierId: string;
+  supplierName: string;
+  status: OrderStatus;
+  orderDate: string;
+  expectedDeliveryDate: string;
+  items: PurchaseOrderItem[];
+  totalAmount: number;
+  notes: string;
+  receivedBy?: string;
+  receivedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }

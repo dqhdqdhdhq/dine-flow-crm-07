@@ -14,6 +14,7 @@ import Notes from "./pages/Notes";
 import FeedbackPage from "./pages/Feedback";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
+import Inventory from "./pages/Inventory";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,7 +29,8 @@ const App = () => (
             <Route path="/customers" element={<MainLayout><Customers /></MainLayout>} />
             <Route path="/customers/:id" element={<MainLayout><CustomerProfile /></MainLayout>} />
             <Route path="/reservations" element={<MainLayout><Reservations /></MainLayout>} />
-            <Route path="/reservations/new" element={<MainLayout><Reservations /></MainLayout>} /> {/* New route for adding reservations */}
+            <Route path="/reservations/new" element={<MainLayout><Reservations /></MainLayout>} />
+            <Route path="/inventory" element={<MainLayout><Inventory /></MainLayout>} />
             <Route path="/notes" element={<MainLayout><Notes /></MainLayout>} />
             <Route path="/feedback" element={<MainLayout><FeedbackPage /></MainLayout>} />
             <Route path="/reports" element={<MainLayout><Reports /></MainLayout>} />
