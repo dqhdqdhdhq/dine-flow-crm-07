@@ -29,6 +29,7 @@ const mockSuppliers: Supplier[] = [
     email: 'marco@italianimports.com',
     address: '123 Cheese Lane, San Francisco, CA 94110',
     productsSupplied: ['Parmigiano Reggiano', 'Truffle Oil', 'Balsamic Vinegar'],
+    status: 'active',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },
@@ -40,6 +41,7 @@ const mockSuppliers: Supplier[] = [
     email: 'sophia@premiumwines.com',
     address: '456 Vineyard Road, Napa Valley, CA 94558',
     productsSupplied: ['Cabernet Sauvignon', 'Pinot Noir', 'Chardonnay'],
+    status: 'active',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },
@@ -51,6 +53,7 @@ const mockSuppliers: Supplier[] = [
     email: 'david@localproduce.com',
     address: '789 Farm Road, Berkeley, CA 94710',
     productsSupplied: ['Organic Vegetables', 'Fresh Herbs', 'Specialty Mushrooms'],
+    status: 'active',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   }
