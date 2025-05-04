@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Customers from "./pages/Customers";
 import CustomerProfile from "./pages/CustomerProfile";
 import Reservations from "./pages/Reservations";
+import NewReservation from "./pages/NewReservation";
 import Notes from "./pages/Notes";
 import FeedbackPage from "./pages/Feedback";
 import FeedbackHub from "./pages/FeedbackHub";
@@ -33,7 +34,7 @@ const App = () => (
             <Route path="/customers" element={<MainLayout><Customers /></MainLayout>} />
             <Route path="/customers/:id" element={<MainLayout><CustomerProfile /></MainLayout>} />
             <Route path="/reservations" element={<MainLayout><Reservations /></MainLayout>} />
-            <Route path="/reservations/new" element={<MainLayout><Reservations /></MainLayout>} />
+            <Route path="/reservations/new" element={<MainLayout><NewReservation /></MainLayout>} />
             <Route path="/inventory" element={<MainLayout><Inventory /></MainLayout>} />
             <Route path="/vendors" element={<MainLayout><Vendors /></MainLayout>} />
             <Route path="/notes" element={<MainLayout><Notes /></MainLayout>} />

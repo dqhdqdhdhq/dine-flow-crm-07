@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Plus, Search, Calendar } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRealtime } from '@/context/RealtimeContext';
 import { Reservation, ReservationStatus } from '@/types';
@@ -15,6 +15,7 @@ import FloorPlanView from '@/components/reservations/FloorPlanView';
 type ViewType = 'list' | 'calendar' | 'floor-plan';
 
 const Reservations: React.FC = () => {
+  const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [currentView, setCurrentView] = useState<ViewType>('list');
   const { reservations, tables, updateReservation, updateTable, assignTable, unassignTable, getAvailableTables } = useRealtime();
@@ -26,6 +27,10 @@ const Reservations: React.FC = () => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  };
+
+  const handleNewReservation = () => {
+    navigate('/reservations/new');
   };
 
   const updateStatus = (reservation: Reservation, newStatus: ReservationStatus) => {
@@ -65,12 +70,13 @@ const Reservations: React.FC = () => {
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-3xl font-bold tracking-tight">Reservations</h1>
-        <Link to="/reservations/new">
-          <Button className="bg-brand hover:bg-brand-muted">
-            <Plus className="mr-2 h-4 w-4" />
-            New Reservation
-          </Button>
-        </Link>
+        <Button 
+          onClick={handleNewReservation}
+          className="bg-brand hover:bg-brand-muted"
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          New Reservation
+        </Button>
       </div>
       
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
