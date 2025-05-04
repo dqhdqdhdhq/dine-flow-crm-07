@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -11,7 +12,8 @@ import {
   MessageSquare,
   PanelLeft,
   PanelRight,
-  FileCog
+  FileCog,
+  Wallet
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -133,6 +135,14 @@ const Sidebar = () => {
             label="Reports"
             to="/reports"
             active={location.pathname.startsWith('/reports')}
+            collapsed={isCollapsed}
+          />
+          
+          <SidebarItem
+            icon={Wallet}
+            label="Financial Hub"
+            to="/financial-hub"
+            active={location.pathname.startsWith('/financial-hub')}
             collapsed={isCollapsed}
           />
           
