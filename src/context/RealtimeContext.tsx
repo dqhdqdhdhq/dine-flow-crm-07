@@ -14,6 +14,7 @@ interface RealtimeContextType {
   assignTable: (reservationId: string, tableId: string) => void;
   unassignTable: (reservationId: string, tableId: string) => void;
   getAvailableTables: (partySize: number, date: string, time: string) => Table[];
+  addReservation: (newReservation: Reservation) => void; // Added the missing function
 }
 
 const RealtimeContext = createContext<RealtimeContextType | null>(null);
@@ -30,6 +31,21 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [reservations, setReservations] = useState<Reservation[]>(mockReservations);
   const [tables, setTables] = useState<Table[]>(mockTables);
   const { toast: uiToast } = useToast();
+
+  // Add a new reservation
+  const addReservation = (newReservation: Reservation) => {
+    setReservations(prev => {
+      const updatedReservations = [...prev, newReservation];
+      
+      // Simulate a WebSocket notification
+      toast.success("Reservation created", {
+        description: `${newReservation.customerName} - ${newReservation.time}`,
+        duration: 3000,
+      });
+      
+      return updatedReservations;
+    });
+  };
 
   // Update a reservation
   const updateReservation = (updatedReservation: Reservation) => {
@@ -198,6 +214,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     assignTable,
     unassignTable,
     getAvailableTables,
+    addReservation, // Added the missing function to the context value
   };
 
   return (

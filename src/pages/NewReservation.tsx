@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRealtime } from '@/context/RealtimeContext';
 import { toast } from 'sonner';
-import { v4 as uuidv4 } from '@/lib/utils';
+import { v4 as uuidv4 } from 'uuid'; // Changed to import from uuid package
 import { Reservation } from '@/types';
 
 const NewReservation = () => {
@@ -53,7 +53,7 @@ const NewReservation = () => {
       notes: formData.notes,
       specialRequests: formData.specialRequests,
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString() // Added the missing property
     };
 
     // Add the new reservation
