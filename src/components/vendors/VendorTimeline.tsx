@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { PurchaseOrder } from '@/types';
+import { PurchaseOrder, Supplier } from '@/types';
 
 // Mock timeline events based on purchase orders
 interface TimelineEvent {
@@ -71,9 +71,11 @@ const mockEvents: TimelineEvent[] = [
 
 interface VendorTimelineProps {
   vendorId: string | null;
+  purchaseOrders?: PurchaseOrder[];
+  suppliers?: Supplier[];
 }
 
-const VendorTimeline: React.FC<VendorTimelineProps> = ({ vendorId }) => {
+const VendorTimeline: React.FC<VendorTimelineProps> = ({ vendorId, purchaseOrders = [], suppliers = [] }) => {
   if (!vendorId) {
     return (
       <div className="flex items-center justify-center h-64 bg-muted/30 rounded-lg">

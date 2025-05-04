@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -93,7 +92,7 @@ const AddPurchaseOrderDialog: React.FC<AddPurchaseOrderDialogProps> = ({
     if (currentItems.length > 1) {
       const newItems = currentItems.filter((_, i) => i !== index);
       form.setValue('items', newItems);
-      setItems(newItems);
+      setItems(items.filter((_, i) => i !== index));
     }
   };
 
