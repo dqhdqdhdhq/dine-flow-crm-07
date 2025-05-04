@@ -24,9 +24,10 @@ import {
 } from "@/components/ui/form";
 import { Plus } from "lucide-react";
 
+// Define the form schema with proper type transformation
 const formSchema = z.object({
   name: z.string().min(1, { message: "Party name is required" }),
-  size: z.string().transform((val) => Number(val)), // Ensure we transform to a number
+  size: z.coerce.number().int().positive(), // This will coerce the string to a number automatically
   notes: z.string().optional(),
 });
 
@@ -47,7 +48,7 @@ const AddToWaitlistDialog: React.FC<AddToWaitlistDialogProps> = ({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      size: "2", // This is correctly a string as the form input will be a string
+      size: 2, // Using a number here since our schema will handle the conversion
       notes: "",
     },
   });
@@ -61,7 +62,7 @@ const AddToWaitlistDialog: React.FC<AddToWaitlistDialogProps> = ({
     
     onAddParty({
       name: values.name,
-      size: Number(values.size), // Explicitly convert to number here
+      size: values.size, // No need to convert, it's already a number
       notes: values.notes,
     });
     
@@ -108,6 +109,8 @@ const AddToWaitlistDialog: React.FC<AddToWaitlistDialogProps> = ({
                     <select
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       {...field}
+                      value={field.value.toString()} // Convert number to string for the select
+                      onChange={(e) => field.onChange(Number(e.target.value))} // Convert string back to number
                     >
                       {[1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 15, 20].map((size) => (
                         <option key={size} value={size.toString()}>
