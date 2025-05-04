@@ -4,6 +4,7 @@ import Sidebar from './Sidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
+import { Outlet } from 'react-router-dom';
 
 interface MainLayoutProps {
   children: React.ReactNode;

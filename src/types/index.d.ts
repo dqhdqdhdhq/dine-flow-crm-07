@@ -1,4 +1,3 @@
-
 export interface InventoryItem {
   id: string;
   name: string;
@@ -63,15 +62,18 @@ export type ReservationStatus = 'pending' | 'confirmed' | 'seated' | 'completed'
 export interface Reservation {
   id: string;
   customerName: string;
+  customerId: string;
   date: string;
   time: string;
   partySize: number;
+  tableIds: string[];
+  status: ReservationStatus;
+  notes: string;
+  specialRequests: string;
+  createdAt: string;
+  updatedAt: string;
   phone?: string;
   email?: string;
-  notes?: string;
-  status: ReservationStatus;
-  tableIds: string[];
-  createdAt: string;
 }
 
 export type TableStatus = 'available' | 'occupied' | 'reserved' | 'unavailable';

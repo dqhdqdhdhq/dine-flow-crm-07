@@ -1,5 +1,5 @@
 
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
 import { RealtimeProvider } from './context/RealtimeContext';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "sonner";
@@ -28,7 +28,7 @@ function App() {
     <RealtimeProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<MainLayout />}>
+          <Route path="/" element={<MainLayout><Outlet /></MainLayout>}>
             <Route index element={<Index />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="reservations">

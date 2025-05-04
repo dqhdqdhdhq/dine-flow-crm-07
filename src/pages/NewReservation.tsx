@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
@@ -40,6 +39,7 @@ const NewReservation: React.FC = () => {
     // Create new reservation
     const newReservation = {
       id: `res-${Date.now()}`,
+      customerId: `cust-${Date.now()}`, // Adding required customerId
       customerName,
       date: format(date, 'yyyy-MM-dd'),
       time,
@@ -47,9 +47,11 @@ const NewReservation: React.FC = () => {
       phone,
       email,
       notes,
+      specialRequests: notes, // Using notes as specialRequests
       status: 'confirmed' as const,
       tableIds: [],
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString() // Adding required updatedAt
     };
     
     // Add to reservations
