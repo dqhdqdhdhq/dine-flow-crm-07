@@ -1,10 +1,7 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
-  ChevronRight,
-  ChevronLeft,
   Calendar,
   Users,
   FileText,
@@ -16,7 +13,7 @@ import {
   PanelRight,
   FileCog
 } from 'lucide-react';
-import { useMediaQuery } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface SidebarItemProps {
   icon: React.ElementType;
@@ -51,7 +48,7 @@ const SidebarItem = ({ icon: Icon, label, to, active, collapsed }: SidebarItemPr
 const Sidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isMobile = useIsMobile();
   
   // If we're on mobile, we always want the sidebar collapsed
   const isCollapsed = isMobile || collapsed;
@@ -163,4 +160,3 @@ const Sidebar = () => {
 };
 
 export default Sidebar;
-
