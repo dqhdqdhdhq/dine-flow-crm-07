@@ -1,3 +1,4 @@
+
 export interface Customer {
   id: string;
   firstName: string;
@@ -99,6 +100,7 @@ export interface Supplier {
   email: string;
   address: string;
   productsSupplied: string[];
+  status: 'active' | 'inactive' | 'pending';
   createdAt: string;
   updatedAt: string;
 }
