@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { mockFeedback, mockUsers } from '@/data/mockData';
 import { Input } from '@/components/ui/input';
@@ -12,7 +11,7 @@ import {
   XCircle,
   BarChart2,
   Calendar,
-  User,
+  User as UserIcon,
   MessageSquare,
   FileText,
   Tag
@@ -336,7 +335,7 @@ const FeedbackHub: React.FC = () => {
                         Generate Report
                       </Button>
                       <Button variant="outline" className="w-full justify-start">
-                        <User className="mr-2 h-4 w-4" />
+                        <UserIcon className="mr-2 h-4 w-4" />
                         View Customer Profile
                       </Button>
                     </div>
