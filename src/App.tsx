@@ -28,6 +28,7 @@ const App = () => (
             <Route path="/customers" element={<MainLayout><Customers /></MainLayout>} />
             <Route path="/customers/:id" element={<MainLayout><CustomerProfile /></MainLayout>} />
             <Route path="/reservations" element={<MainLayout><Reservations /></MainLayout>} />
+            <Route path="/reservations/new" element={<MainLayout><Reservations /></MainLayout>} /> {/* New route for adding reservations */}
             <Route path="/notes" element={<MainLayout><Notes /></MainLayout>} />
             <Route path="/feedback" element={<MainLayout><FeedbackPage /></MainLayout>} />
             <Route path="/reports" element={<MainLayout><Reports /></MainLayout>} />
