@@ -2,12 +2,22 @@
 import React from 'react';
 import { Table } from '@/types';
 import { Badge } from '@/components/ui/badge';
+import { useRealtime } from '@/context/RealtimeContext';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface DashboardTableStatusProps {
   tables: Table[];
 }
 
 const DashboardTableStatus: React.FC<DashboardTableStatusProps> = ({ tables }) => {
+  const { updateTable } = useRealtime();
+  
   // Group tables by location
   const tablesByLocation: Record<string, Table[]> = tables.reduce((acc, table) => {
     if (!acc[table.location]) {
@@ -31,6 +41,13 @@ const DashboardTableStatus: React.FC<DashboardTableStatusProps> = ({ tables }) =
         return 'bg-gray-100 text-gray-800';
     }
   };
+
+  const handleStatusChange = (table: Table, newStatus: 'available' | 'occupied' | 'reserved' | 'unavailable') => {
+    updateTable({
+      ...table,
+      status: newStatus
+    });
+  };
   
   return (
     <div className="space-y-6">
@@ -41,13 +58,25 @@ const DashboardTableStatus: React.FC<DashboardTableStatusProps> = ({ tables }) =
             {locationTables.map((table) => (
               <div 
                 key={table.id} 
-                className={`p-3 rounded-lg border ${getStatusColor(table.status)} text-center shadow-sm`}
+                className={`p-3 rounded-lg border ${getStatusColor(table.status)} text-center shadow-sm hover:shadow-md transition-all`}
               >
                 <div className="font-bold">Table {table.number}</div>
                 <div className="text-xs">Seats {table.capacity}</div>
-                <Badge variant="outline" className="mt-1 capitalize bg-white/20">
-                  {table.status}
-                </Badge>
+                
+                <Select 
+                  value={table.status} 
+                  onValueChange={(value) => handleStatusChange(table, value as any)}
+                >
+                  <SelectTrigger className="mt-2 h-7 text-xs bg-white/20 border-white/40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="available">Available</SelectItem>
+                    <SelectItem value="occupied">Occupied</SelectItem>
+                    <SelectItem value="reserved">Reserved</SelectItem>
+                    <SelectItem value="unavailable">Unavailable</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             ))}
           </div>

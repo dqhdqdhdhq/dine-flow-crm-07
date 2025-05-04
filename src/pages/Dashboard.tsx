@@ -3,25 +3,35 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, Plus, Clock, Users, ChevronsUp } from 'lucide-react';
-import { mockReservations, mockTables, mockDailySummaries } from '@/data/mockData';
+import { mockDailySummaries } from '@/data/mockData';
 import { Link } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import DashboardTableStatus from '@/components/dashboard/DashboardTableStatus';
 import DashboardUpcomingReservations from '@/components/dashboard/DashboardUpcomingReservations';
+import { useRealtime } from '@/context/RealtimeContext';
 
 const Dashboard: React.FC = () => {
+  const { tables, reservations } = useRealtime();
+  
   const todaySummary = mockDailySummaries[0];
   const visitsData = mockDailySummaries.map(summary => ({
     name: summary.date.split('-')[2], // Just the day number for brevity
     guests: summary.totalCustomers
   })).reverse();
   
-  const availableTables = mockTables.filter(table => table.status === 'available').length;
-  const occupiedTables = mockTables.filter(table => table.status === 'occupied').length;
-  const reservedTables = mockTables.filter(table => table.status === 'reserved').length;
+  const availableTables = tables.filter(table => table.status === 'available').length;
+  const occupiedTables = tables.filter(table => table.status === 'occupied').length;
+  const reservedTables = tables.filter(table => table.status === 'reserved').length;
   
-  const upcomingReservations = mockReservations
-    .filter(res => res.status === 'confirmed' || res.status === 'pending')
+  // Get today's date in YYYY-MM-DD format
+  const today = new Date().toISOString().split('T')[0];
+  
+  // Filter reservations for today that are confirmed or pending
+  const upcomingReservations = reservations
+    .filter(res => 
+      (res.status === 'confirmed' || res.status === 'pending') && 
+      res.date === today
+    )
     .sort((a, b) => {
       const dateTimeA = new Date(`${a.date}T${a.time}`);
       const dateTimeB = new Date(`${b.date}T${b.time}`);
@@ -61,7 +71,7 @@ const Dashboard: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
-              <div className="text-2xl font-bold">{availableTables} / {mockTables.length}</div>
+              <div className="text-2xl font-bold">{availableTables} / {tables.length}</div>
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </div>
             <p className="text-xs text-muted-foreground mt-1">
@@ -153,7 +163,7 @@ const Dashboard: React.FC = () => {
           <CardDescription>Current overview of all tables</CardDescription>
         </CardHeader>
         <CardContent>
-          <DashboardTableStatus tables={mockTables} />
+          <DashboardTableStatus tables={tables} />
         </CardContent>
       </Card>
     </div>

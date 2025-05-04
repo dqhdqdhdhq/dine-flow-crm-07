@@ -1,9 +1,8 @@
 
 import React, { useState } from 'react';
-import { mockReservations } from '@/data/mockData';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Plus, Search, Calendar } from 'lucide-react';
+import { Plus, Search, Calendar, Check, X, Edit, Save, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -16,13 +15,30 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { Reservation, ReservationStatus } from '@/types';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useRealtime } from '@/context/RealtimeContext';
+import { Reservation, ReservationStatus, Table } from '@/types';
+import { toast } from 'sonner';
 
 const Reservations: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const { reservations, tables, updateReservation, updateTable, assignTable, unassignTable, getAvailableTables } = useRealtime();
+  const [editingReservation, setEditingReservation] = useState<string | null>(null);
+  const [editData, setEditData] = useState<Partial<Reservation>>({});
   
-  const filteredReservations = mockReservations.filter(reservation => 
+  const filteredReservations = reservations.filter(reservation => 
     (reservation.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     reservation.id.includes(searchTerm)) &&
     reservation.date === selectedDate
@@ -70,6 +86,90 @@ const Reservations: React.FC = () => {
   
   const handleDateSelect = (date: string) => {
     setSelectedDate(date);
+  };
+
+  const startInlineEdit = (reservation: Reservation) => {
+    setEditingReservation(reservation.id);
+    setEditData({
+      partySize: reservation.partySize,
+      status: reservation.status,
+      specialRequests: reservation.specialRequests
+    });
+  };
+
+  const cancelInlineEdit = () => {
+    setEditingReservation(null);
+    setEditData({});
+  };
+
+  const saveInlineEdit = (reservation: Reservation) => {
+    const updatedReservation = {
+      ...reservation,
+      ...editData
+    };
+    
+    updateReservation(updatedReservation);
+    
+    // If status changed to seated, update table status
+    if (editData.status === 'seated' && reservation.status !== 'seated') {
+      reservation.tableIds.forEach(tableId => {
+        const table = tables.find(t => t.id === tableId);
+        if (table) {
+          updateTable({
+            ...table,
+            status: 'occupied'
+          });
+        }
+      });
+    }
+    
+    // If status changed to completed, update table status
+    if (editData.status === 'completed' && reservation.status !== 'completed') {
+      reservation.tableIds.forEach(tableId => {
+        const table = tables.find(t => t.id === tableId);
+        if (table) {
+          updateTable({
+            ...table,
+            status: 'available'
+          });
+        }
+      });
+    }
+    
+    cancelInlineEdit();
+    toast.success("Reservation updated successfully");
+  };
+
+  const updateStatus = (reservation: Reservation, newStatus: ReservationStatus) => {
+    const updatedReservation = {
+      ...reservation,
+      status: newStatus
+    };
+    
+    updateReservation(updatedReservation);
+    
+    // Update table statuses based on reservation status
+    if (newStatus === 'seated') {
+      reservation.tableIds.forEach(tableId => {
+        const table = tables.find(t => t.id === tableId);
+        if (table) {
+          updateTable({
+            ...table,
+            status: 'occupied'
+          });
+        }
+      });
+    } else if (newStatus === 'completed' || newStatus === 'cancelled' || newStatus === 'no-show') {
+      reservation.tableIds.forEach(tableId => {
+        const table = tables.find(t => t.id === tableId);
+        if (table) {
+          updateTable({
+            ...table,
+            status: 'available'
+          });
+        }
+      });
+    }
   };
   
   return (
@@ -132,6 +232,17 @@ const Reservations: React.FC = () => {
                       key={reservation.id} 
                       reservation={reservation}
                       getStatusBadgeVariant={getStatusBadgeVariant}
+                      isEditing={editingReservation === reservation.id}
+                      editData={editData}
+                      setEditData={setEditData}
+                      startEdit={() => startInlineEdit(reservation)}
+                      cancelEdit={cancelInlineEdit}
+                      saveEdit={() => saveInlineEdit(reservation)}
+                      updateStatus={updateStatus}
+                      tables={tables}
+                      getAvailableTables={getAvailableTables}
+                      assignTable={assignTable}
+                      unassignTable={unassignTable}
                     />
                   ))}
                 </div>
@@ -154,36 +265,280 @@ const Reservations: React.FC = () => {
 interface ReservationCardProps {
   reservation: Reservation;
   getStatusBadgeVariant: (status: ReservationStatus) => string;
+  isEditing: boolean;
+  editData: Partial<Reservation>;
+  setEditData: React.Dispatch<React.SetStateAction<Partial<Reservation>>>;
+  startEdit: () => void;
+  cancelEdit: () => void;
+  saveEdit: () => void;
+  updateStatus: (reservation: Reservation, status: ReservationStatus) => void;
+  tables: Table[];
+  getAvailableTables: (partySize: number, date: string, time: string) => Table[];
+  assignTable: (reservationId: string, tableId: string) => void;
+  unassignTable: (reservationId: string, tableId: string) => void;
 }
 
 const ReservationCard: React.FC<ReservationCardProps> = ({ 
   reservation, 
-  getStatusBadgeVariant 
+  getStatusBadgeVariant,
+  isEditing,
+  editData,
+  setEditData,
+  startEdit,
+  cancelEdit,
+  saveEdit,
+  updateStatus,
+  tables,
+  getAvailableTables,
+  assignTable,
+  unassignTable
 }) => {
-  return (
-    <Link to={`/reservations/${reservation.id}`}>
-      <Card className="reservation-card h-full hover:shadow-md transition-all">
-        <CardContent className="p-4">
+  const [showQuickActions, setShowQuickActions] = useState(false);
+  
+  // Get assigned tables
+  const assignedTables = tables.filter(table => 
+    reservation.tableIds.includes(table.id)
+  );
+  
+  // Get available tables that could be assigned
+  const availableTables = getAvailableTables(
+    reservation.partySize,
+    reservation.date,
+    reservation.time
+  );
+  
+  const handleAssignTable = (tableId: string) => {
+    assignTable(reservation.id, tableId);
+    toast.success(`Table assigned to ${reservation.customerName}`);
+  };
+  
+  const handleUnassignTable = (tableId: string) => {
+    unassignTable(reservation.id, tableId);
+    toast.info(`Table unassigned from reservation`);
+  };
+  
+  // Quick status update buttons based on current status
+  const getQuickActions = () => {
+    switch(reservation.status) {
+      case 'pending':
+        return (
+          <>
+            <Button 
+              size="sm" 
+              className="bg-emerald-500 hover:bg-emerald-600"
+              onClick={() => updateStatus(reservation, 'confirmed')}
+            >
+              <Check className="mr-1 h-3 w-3" /> Confirm
+            </Button>
+            <Button 
+              size="sm" 
+              variant="destructive"
+              onClick={() => updateStatus(reservation, 'cancelled')}
+            >
+              <X className="mr-1 h-3 w-3" /> Cancel
+            </Button>
+          </>
+        );
+      case 'confirmed':
+        return (
+          <>
+            <Button 
+              size="sm" 
+              className="bg-brand hover:bg-brand-muted"
+              onClick={() => updateStatus(reservation, 'seated')}
+            >
+              <Check className="mr-1 h-3 w-3" /> Seat
+            </Button>
+            <Button 
+              size="sm" 
+              variant="destructive"
+              onClick={() => updateStatus(reservation, 'no-show')}
+            >
+              <X className="mr-1 h-3 w-3" /> No-Show
+            </Button>
+          </>
+        );
+      case 'seated':
+        return (
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => updateStatus(reservation, 'completed')}
+          >
+            <Check className="mr-1 h-3 w-3" /> Complete
+          </Button>
+        );
+      case 'completed':
+      case 'cancelled':
+      case 'no-show':
+        return (
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => updateStatus(reservation, 'pending')}
+          >
+            <RefreshCw className="mr-1 h-3 w-3" /> Reopen
+          </Button>
+        );
+    }
+  };
+
+  // Show inline edit form if editing
+  if (isEditing) {
+    return (
+      <Card className="reservation-card h-full border-2 border-brand">
+        <CardContent className="p-4 space-y-3">
           <div className="flex justify-between items-start">
             <div>
               <h4 className="font-medium">{reservation.customerName}</h4>
-              <p className="text-sm text-muted-foreground">
-                {reservation.partySize} {reservation.partySize === 1 ? 'guest' : 'guests'}
-                {reservation.tableIds.length > 0 && ` • Table ${reservation.tableIds.map(id => id.split('-')[1]).join(', ')}`}
-              </p>
-              {reservation.specialRequests && (
-                <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
-                  <span className="font-medium">Request:</span> {reservation.specialRequests}
-                </p>
-              )}
+              <div className="flex items-center gap-2 mt-1">
+                <Input 
+                  type="number" 
+                  className="w-20 h-8"
+                  value={editData.partySize || reservation.partySize}
+                  onChange={(e) => setEditData({...editData, partySize: parseInt(e.target.value)})}
+                />
+                <span className="text-sm">guests</span>
+              </div>
             </div>
-            <Badge className={`${getStatusBadgeVariant(reservation.status)} capitalize`}>
-              {reservation.status}
-            </Badge>
+            
+            <Select 
+              value={editData.status || reservation.status} 
+              onValueChange={(value) => setEditData({...editData, status: value as ReservationStatus})}
+            >
+              <SelectTrigger className={`h-8 w-[110px] ${getStatusBadgeVariant(editData.status as ReservationStatus || reservation.status)}`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="confirmed">Confirmed</SelectItem>
+                <SelectItem value="seated">Seated</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+                <SelectItem value="no-show">No Show</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="pt-1">
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">Special Requests:</label>
+            <Input
+              value={editData.specialRequests || reservation.specialRequests}
+              onChange={(e) => setEditData({...editData, specialRequests: e.target.value})}
+              className="text-xs h-8"
+              placeholder="Add special requests..."
+            />
+          </div>
+          
+          <div className="flex justify-end space-x-2 pt-2">
+            <Button variant="outline" size="sm" onClick={cancelEdit}>
+              <X className="mr-1 h-3 w-3" /> Cancel
+            </Button>
+            <Button className="bg-brand hover:bg-brand-muted" size="sm" onClick={saveEdit}>
+              <Save className="mr-1 h-3 w-3" /> Save
+            </Button>
           </div>
         </CardContent>
       </Card>
-    </Link>
+    );
+  }
+  
+  // Regular card
+  return (
+    <Card 
+      className={`reservation-card h-full hover:shadow-md transition-all ${showQuickActions ? 'ring-1 ring-brand' : ''}`}
+      onMouseEnter={() => setShowQuickActions(true)}
+      onMouseLeave={() => setShowQuickActions(false)}
+    >
+      <CardContent className="p-4">
+        <div className="flex justify-between items-start">
+          <div>
+            <h4 className="font-medium">{reservation.customerName}</h4>
+            <p className="text-sm text-muted-foreground">
+              {reservation.partySize} {reservation.partySize === 1 ? 'guest' : 'guests'}
+            </p>
+          </div>
+          <Badge className={`${getStatusBadgeVariant(reservation.status)} capitalize`}>
+            {reservation.status}
+          </Badge>
+        </div>
+        
+        {/* Table information */}
+        <div className="mt-3">
+          {assignedTables.length > 0 ? (
+            <div className="flex flex-wrap gap-1">
+              {assignedTables.map(table => (
+                <Badge key={table.id} variant="outline" className="flex gap-1 items-center">
+                  Table {table.number}
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault(); // Prevent navigation
+                      handleUnassignTable(table.id);
+                    }}
+                    className="hover:bg-gray-100 rounded-full p-0.5"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-amber-600 font-medium">No tables assigned</p>
+          )}
+        </div>
+        
+        {/* Special requests */}
+        {reservation.specialRequests && (
+          <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
+            <span className="font-medium">Request:</span> {reservation.specialRequests}
+          </p>
+        )}
+        
+        {/* Quick actions toolbar */}
+        {showQuickActions && (
+          <div className="mt-3 pt-2 border-t flex flex-wrap gap-2 justify-between items-center">
+            <div className="flex gap-1">
+              {getQuickActions()}
+            </div>
+            
+            <div className="flex gap-1">
+              {/* Table assignment popover */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-7 px-2">
+                    Assign Table
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 p-2">
+                  <p className="text-xs font-medium mb-2">Available Tables:</p>
+                  {availableTables.length > 0 ? (
+                    <div className="grid grid-cols-2 gap-1">
+                      {availableTables.map(table => (
+                        <Button 
+                          key={table.id} 
+                          variant="outline" 
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => handleAssignTable(table.id)}
+                        >
+                          Table {table.number} ({table.capacity})
+                        </Button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">No tables available</p>
+                  )}
+                </PopoverContent>
+              </Popover>
+              
+              <Button variant="outline" size="sm" className="h-7 px-2" onClick={startEdit}>
+                <Edit className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
