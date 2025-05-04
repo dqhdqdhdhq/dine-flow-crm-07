@@ -53,7 +53,7 @@ export interface Supplier {
   email: string;
   address: string;
   productsSupplied: string[];
-  status?: 'active' | 'inactive' | 'pending';
+  status: 'active' | 'inactive' | 'pending';
   createdAt: string;
   updatedAt: string;
 }
