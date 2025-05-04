@@ -33,18 +33,20 @@ import {
 interface FeedbackDetailsProps {
   feedback: Feedback;
   onClose: () => void;
+  onSave: (updatedFeedback: Feedback) => void;
   users: User[];
 }
 
 export const FeedbackDetails: React.FC<FeedbackDetailsProps> = ({ 
   feedback, 
   onClose,
+  onSave,
   users
 }) => {
   const [requiresFollowUp, setRequiresFollowUp] = useState(feedback.followUpRequired);
   const [followUpDone, setFollowUpDone] = useState(feedback.followUpDone);
-  const [followUpNotes, setFollowUpNotes] = useState(feedback.followUpNotes);
-  const [assignedTo, setAssignedTo] = useState<string>('');
+  const [followUpNotes, setFollowUpNotes] = useState(feedback.followUpNotes || '');
+  const [assignedTo, setAssignedTo] = useState<string>(feedback.assignedTo || '');
   
   const handleFollowUpToggle = () => {
     setRequiresFollowUp(!requiresFollowUp);
@@ -54,8 +56,15 @@ export const FeedbackDetails: React.FC<FeedbackDetailsProps> = ({
   };
   
   const handleSaveChanges = () => {
-    // In a real app, this would update the feedback in the database
-    // For now, we just close the detail view
+    const updatedFeedback: Feedback = {
+      ...feedback,
+      followUpRequired: requiresFollowUp,
+      followUpDone,
+      followUpNotes,
+      assignedTo
+    };
+    
+    onSave(updatedFeedback);
     onClose();
   };
   

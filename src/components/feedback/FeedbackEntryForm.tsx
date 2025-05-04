@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import {
   Dialog,
   DialogContent,
@@ -20,7 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { FeedbackType } from '@/types';
+import { Feedback, FeedbackType } from '@/types';
 import { 
   Star, 
   Search, 
@@ -31,11 +32,13 @@ import { mockCustomers } from '@/data/mockData';
 interface FeedbackEntryFormProps {
   isOpen: boolean;
   onClose: () => void;
+  onSave: (feedback: Feedback) => void;
 }
 
 export const FeedbackEntryForm: React.FC<FeedbackEntryFormProps> = ({ 
   isOpen, 
-  onClose 
+  onClose,
+  onSave
 }) => {
   const [customerSearch, setCustomerSearch] = useState('');
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
@@ -60,29 +63,47 @@ export const FeedbackEntryForm: React.FC<FeedbackEntryFormProps> = ({
     setShowCustomerSearch(false);
   };
   
-  const handleSubmit = () => {
-    // In a real app, this would submit the form data to create a new feedback entry
-    console.log({
-      customerId: selectedCustomerId,
-      customerName: manualCustomerName,
-      type: feedbackType,
-      rating,
-      content,
-      followUpRequired: requireFollowUp,
-    });
-    
-    // Reset form and close dialog
+  const resetForm = () => {
     setSelectedCustomerId(null);
     setManualCustomerName('');
     setFeedbackType('positive');
     setRating(5);
     setContent('');
     setRequireFollowUp(false);
+    setShowCustomerSearch(false);
+    setCustomerSearch('');
+  };
+  
+  const handleSubmit = () => {
+    // Create new feedback object
+    const newFeedback: Feedback = {
+      id: uuidv4(),
+      customerId: selectedCustomerId || uuidv4(),
+      customerName: manualCustomerName,
+      type: feedbackType,
+      rating,
+      content,
+      createdAt: new Date().toISOString(),
+      followUpRequired: requireFollowUp,
+      followUpDone: false,
+      followUpNotes: '',
+      assignedTo: ''
+    };
+    
+    // Call the save function
+    onSave(newFeedback);
+    
+    // Reset form and close dialog
+    resetForm();
     onClose();
   };
   
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) {
+        onClose();
+      }
+    }}>
       <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
           <DialogTitle className="text-xl">Log New Feedback</DialogTitle>

@@ -53,6 +53,7 @@ import { FeedbackDetails } from '@/components/feedback/FeedbackDetails';
 import { FeedbackCard } from '@/components/feedback/FeedbackCard';
 import { FeedbackStats } from '@/components/feedback/FeedbackStats';
 import { FeedbackEntryForm } from '@/components/feedback/FeedbackEntryForm';
+import { toast } from 'sonner';
 
 const FeedbackHub: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -65,13 +66,14 @@ const FeedbackHub: React.FC = () => {
   const [activeView, setActiveView] = useState<'list' | 'stats'>('list');
   const [selectedFeedbackId, setSelectedFeedbackId] = useState<string | null>(null);
   const [isEntryFormOpen, setIsEntryFormOpen] = useState(false);
+  const [feedbackList, setFeedbackList] = useState(mockFeedback);
 
   // Derive the selected feedback object if an ID is selected
   const selectedFeedback = selectedFeedbackId 
-    ? mockFeedback.find(fb => fb.id === selectedFeedbackId) 
+    ? feedbackList.find(fb => fb.id === selectedFeedbackId) 
     : null;
   
-  const filteredFeedback = mockFeedback.filter(fb => {
+  const filteredFeedback = feedbackList.filter(fb => {
     const matchesSearch = 
       fb.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       fb.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -120,6 +122,18 @@ const FeedbackHub: React.FC = () => {
 
   const handleFeedbackClick = (id: string) => {
     setSelectedFeedbackId(id);
+  };
+  
+  const handleSaveFeedback = (updatedFeedback: Feedback) => {
+    setFeedbackList(prevList => 
+      prevList.map(fb => fb.id === updatedFeedback.id ? updatedFeedback : fb)
+    );
+    toast.success('Feedback updated successfully');
+  };
+  
+  const handleAddNewFeedback = (newFeedback: Feedback) => {
+    setFeedbackList(prevList => [...prevList, newFeedback]);
+    toast.success('New feedback added successfully');
   };
 
   return (
@@ -285,6 +299,7 @@ const FeedbackHub: React.FC = () => {
                   feedback={selectedFeedback} 
                   onClose={() => setSelectedFeedbackId(null)}
                   users={mockUsers}
+                  onSave={handleSaveFeedback}
                 />
               </div>
               <div className="space-y-4">
@@ -368,7 +383,7 @@ const FeedbackHub: React.FC = () => {
         
         <TabsContent value="requires-action">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {mockFeedback
+            {feedbackList
               .filter(fb => fb.followUpRequired && !fb.followUpDone)
               .map((feedback) => (
                 <div 
@@ -384,7 +399,7 @@ const FeedbackHub: React.FC = () => {
         
         <TabsContent value="resolved">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {mockFeedback
+            {feedbackList
               .filter(fb => fb.followUpRequired && fb.followUpDone)
               .map((feedback) => (
                 <div 
@@ -403,6 +418,7 @@ const FeedbackHub: React.FC = () => {
       <FeedbackEntryForm 
         isOpen={isEntryFormOpen} 
         onClose={() => setIsEntryFormOpen(false)} 
+        onSave={handleAddNewFeedback}
       />
     </div>
   );
