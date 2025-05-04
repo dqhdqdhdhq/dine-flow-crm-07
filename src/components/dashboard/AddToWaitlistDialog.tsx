@@ -26,7 +26,7 @@ import { Plus } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().min(1, { message: "Party name is required" }),
-  size: z.string().transform((val) => parseInt(val, 10)),
+  size: z.string().transform((val) => Number(val)), // Ensure we transform to a number
   notes: z.string().optional(),
 });
 
@@ -47,7 +47,7 @@ const AddToWaitlistDialog: React.FC<AddToWaitlistDialogProps> = ({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      size: "2",
+      size: "2", // This is correctly a string as the form input will be a string
       notes: "",
     },
   });
@@ -61,7 +61,7 @@ const AddToWaitlistDialog: React.FC<AddToWaitlistDialogProps> = ({
     
     onAddParty({
       name: values.name,
-      size: values.size,
+      size: Number(values.size), // Explicitly convert to number here
       notes: values.notes,
     });
     
@@ -110,7 +110,7 @@ const AddToWaitlistDialog: React.FC<AddToWaitlistDialogProps> = ({
                       {...field}
                     >
                       {[1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 15, 20].map((size) => (
-                        <option key={size} value={size}>
+                        <option key={size} value={size.toString()}>
                           {size} {size === 1 ? "person" : "people"}
                         </option>
                       ))}
