@@ -1,17 +1,50 @@
 
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, Store, FileText, Calendar } from 'lucide-react';
+import { Plus, Search, Store, FileText, Calendar, Filter, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
 import VendorsList from '@/components/vendors/VendorsList';
 import VendorDashboard from '@/components/vendors/VendorDashboard';
 import VendorCalendar from '@/components/vendors/VendorCalendar';
 import VendorTimeline from '@/components/vendors/VendorTimeline';
+import { Badge } from '@/components/ui/badge';
 
 const Vendors: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedVendor, setSelectedVendor] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [visibleColumns, setVisibleColumns] = useState({
+    name: true,
+    contactPerson: true,
+    contactInfo: true,
+    productsSupplied: true,
+  });
+
+  // Status filter options for vendors
+  const handleStatusFilterChange = (status: string) => {
+    setStatusFilter(current => 
+      current.includes(status)
+        ? current.filter(s => s !== status)
+        : [...current, status]
+    );
+  };
+
+  // Column visibility toggle
+  const toggleColumn = (column: keyof typeof visibleColumns) => {
+    setVisibleColumns(prev => ({
+      ...prev,
+      [column]: !prev[column]
+    }));
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -40,6 +73,84 @@ const Vendors: React.FC = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
+        <div className="flex gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9 gap-1">
+                <Filter className="h-4 w-4" />
+                Filter
+                {statusFilter.length > 0 && (
+                  <Badge variant="secondary" className="ml-1 px-1 py-0 h-5">
+                    {statusFilter.length}
+                  </Badge>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem disabled className="font-medium">Filter by Status</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuCheckboxItem
+                checked={statusFilter.includes('active')}
+                onCheckedChange={() => handleStatusFilterChange('active')}
+              >
+                Active
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={statusFilter.includes('inactive')}
+                onCheckedChange={() => handleStatusFilterChange('inactive')}
+              >
+                Inactive
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={statusFilter.includes('pending')}
+                onCheckedChange={() => handleStatusFilterChange('pending')}
+              >
+                Pending Approval
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setStatusFilter([])}>
+                Clear Filters
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9 gap-1">
+                <SlidersHorizontal className="h-4 w-4" />
+                Columns
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem disabled className="font-medium">Toggle Columns</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuCheckboxItem
+                checked={visibleColumns.name}
+                onCheckedChange={() => toggleColumn('name')}
+              >
+                Vendor Name
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={visibleColumns.contactPerson}
+                onCheckedChange={() => toggleColumn('contactPerson')}
+              >
+                Contact Person
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={visibleColumns.contactInfo}
+                onCheckedChange={() => toggleColumn('contactInfo')}
+              >
+                Contact Info
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={visibleColumns.productsSupplied}
+                onCheckedChange={() => toggleColumn('productsSupplied')}
+              >
+                Products Supplied
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       <Tabs defaultValue="list">
@@ -66,6 +177,8 @@ const Vendors: React.FC = () => {
           <VendorsList 
             searchQuery={searchQuery} 
             onSelectVendor={(vendorId) => setSelectedVendor(vendorId)}
+            statusFilter={statusFilter}
+            visibleColumns={visibleColumns}
           />
         </TabsContent>
 
