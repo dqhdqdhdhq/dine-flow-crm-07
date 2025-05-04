@@ -1,4 +1,3 @@
-
 export interface Customer {
   id: string;
   firstName: string;
@@ -88,8 +87,10 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'admin' | 'manager' | 'staff';
+  role: 'admin' | 'manager' | 'staff' | 'owner' | 'employee';
   avatarUrl?: string;
+  isActive?: boolean;
+  lastLogin?: string;
 }
 
 export interface Supplier {
