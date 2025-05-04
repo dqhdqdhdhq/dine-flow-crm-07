@@ -1,4 +1,3 @@
-
 import { 
   Customer, 
   Table, 
@@ -15,21 +14,24 @@ export const mockUsers: User[] = [
     name: 'John Smith',
     email: 'john@dineflow.com',
     role: 'admin',
-    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John'
+    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John',
+    isActive: true
   },
   {
     id: 'user-002',
     name: 'Sarah Davis',
     email: 'sarah@dineflow.com',
     role: 'manager',
-    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah'
+    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah',
+    isActive: true
   },
   {
     id: 'user-003',
     name: 'Miguel Lopez',
     email: 'miguel@dineflow.com',
     role: 'staff',
-    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Miguel'
+    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Miguel',
+    isActive: true
   }
 ];
 
@@ -42,6 +44,8 @@ export const mockCustomers: Customer[] = [
     phone: '555-123-4567',
     visits: 8,
     lastVisit: '2025-04-15',
+    totalSpent: 1250.75,
+    vip: true,
     tags: ['VIP', 'Regular'],
     preferences: ['Window seat', 'Sparkling water'],
     allergies: ['Peanuts', 'Shellfish'],
@@ -58,6 +62,8 @@ export const mockCustomers: Customer[] = [
     phone: '555-987-6543',
     visits: 3,
     lastVisit: '2025-04-26',
+    totalSpent: 350.50,
+    vip: false,
     tags: ['Regular'],
     preferences: ['Booth', 'Still water'],
     allergies: [],
@@ -74,6 +80,8 @@ export const mockCustomers: Customer[] = [
     phone: '555-222-3333',
     visits: 12,
     lastVisit: '2025-04-30',
+    totalSpent: 2150.25,
+    vip: true,
     tags: ['VIP', 'Regular', 'Wine Enthusiast'],
     preferences: ['Corner table', 'Wine pairing'],
     allergies: ['Dairy'],
@@ -90,6 +98,8 @@ export const mockCustomers: Customer[] = [
     phone: '555-444-5555',
     visits: 1,
     lastVisit: '2025-05-01',
+    totalSpent: 175.80,
+    vip: false,
     tags: ['New Customer'],
     preferences: [],
     allergies: [],
@@ -106,6 +116,8 @@ export const mockCustomers: Customer[] = [
     phone: '555-666-7777',
     visits: 5,
     lastVisit: '2025-04-20',
+    totalSpent: 825.50,
+    vip: false,
     tags: ['Regular', 'Birthday Special'],
     preferences: ['Outdoor seating', 'Desserts'],
     allergies: ['Gluten'],
@@ -117,18 +129,18 @@ export const mockCustomers: Customer[] = [
 ];
 
 export const mockTables: Table[] = [
-  { id: 'table-001', number: 1, capacity: 2, status: 'available', location: 'Window' },
-  { id: 'table-002', number: 2, capacity: 2, status: 'occupied', location: 'Window' },
-  { id: 'table-003', number: 3, capacity: 4, status: 'available', location: 'Center' },
-  { id: 'table-004', number: 4, capacity: 4, status: 'reserved', location: 'Center' },
-  { id: 'table-005', number: 5, capacity: 6, status: 'available', location: 'Corner' },
-  { id: 'table-006', number: 6, capacity: 6, status: 'occupied', location: 'Corner' },
-  { id: 'table-007', number: 7, capacity: 2, status: 'available', location: 'Bar' },
-  { id: 'table-008', number: 8, capacity: 2, status: 'available', location: 'Bar' },
-  { id: 'table-009', number: 9, capacity: 8, status: 'reserved', location: 'Private Room' },
-  { id: 'table-010', number: 10, capacity: 4, status: 'unavailable', location: 'Patio' },
-  { id: 'table-011', number: 11, capacity: 4, status: 'available', location: 'Patio' },
-  { id: 'table-012', number: 12, capacity: 4, status: 'available', location: 'Patio' },
+  { id: 'table-001', number: 1, capacity: 2, status: 'available', section: 'main', location: 'Window' },
+  { id: 'table-002', number: 2, capacity: 2, status: 'occupied', section: 'main', location: 'Window' },
+  { id: 'table-003', number: 3, capacity: 4, status: 'available', section: 'main', location: 'Center' },
+  { id: 'table-004', number: 4, capacity: 4, status: 'reserved', section: 'main', location: 'Center' },
+  { id: 'table-005', number: 5, capacity: 6, status: 'available', section: 'main', location: 'Corner' },
+  { id: 'table-006', number: 6, capacity: 6, status: 'occupied', section: 'main', location: 'Corner' },
+  { id: 'table-007', number: 7, capacity: 2, status: 'available', section: 'bar', location: 'Bar' },
+  { id: 'table-008', number: 8, capacity: 2, status: 'available', section: 'bar', location: 'Bar' },
+  { id: 'table-009', number: 9, capacity: 8, status: 'reserved', section: 'private', location: 'Private Room' },
+  { id: 'table-010', number: 10, capacity: 4, status: 'unavailable', section: 'outdoor', location: 'Patio' },
+  { id: 'table-011', number: 11, capacity: 4, status: 'available', section: 'outdoor', location: 'Patio' },
+  { id: 'table-012', number: 12, capacity: 4, status: 'available', section: 'outdoor', location: 'Patio' },
 ];
 
 export const mockReservations: Reservation[] = [

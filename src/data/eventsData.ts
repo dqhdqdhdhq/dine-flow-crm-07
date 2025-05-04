@@ -1,3 +1,4 @@
+
 import { Event, EventTask, EventGuest, EventType, EventStatus } from '@/types';
 
 const currentYear = new Date().getFullYear();
@@ -117,7 +118,7 @@ export const mockEventGuests: EventGuest[] = [
     email: 'lisa@example.com',
     phone: '555-345-6789',
     attendees: 5,
-    status: 'pending',
+    status: 'pending',  // Changed from 'pending' to 'pending'
     createdAt: formatDate(currentYear, currentMonth - 1, 18),
     updatedAt: formatDate(currentYear, currentMonth - 1, 18)
   },

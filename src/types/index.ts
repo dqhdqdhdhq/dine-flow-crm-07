@@ -7,6 +7,7 @@ export interface User {
   email: string;
   image?: string;
   avatarUrl?: string; // Added for backward compatibility
+  isActive?: boolean; // Adding isActive property
 }
 
 export interface Customer {
@@ -148,7 +149,7 @@ export interface Supplier {
 }
 
 // Invoice-related types
-export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'pending-approval' | 'approved' | 'partially-paid';
+export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'pending-approval' | 'approved' | 'partially-paid' | 'disputed';
 export type InvoiceCategory = 'food' | 'beverage' | 'equipment' | 'maintenance' | 'utilities' | 'rent' | 'other' | 'food-supplies' | 'marketing' | 'payroll';
 
 export interface Invoice {
@@ -245,7 +246,7 @@ export interface EventGuest {
   name: string;
   email?: string;
   phone?: string;
-  status: 'invited' | 'confirmed' | 'declined' | 'cancelled' | 'checked-in'; // Added checked-in status
+  status: 'invited' | 'confirmed' | 'declined' | 'cancelled' | 'checked-in' | 'pending'; // Added pending status
   attendees: number; // Added attendees field
   notes?: string;
   createdAt: string;
@@ -253,11 +254,13 @@ export interface EventGuest {
 }
 
 // Note-related types
+export type NoteCategory = 'customer' | 'reservation' | 'staff' | 'incident' | 'other';
+
 export interface Note {
   id: string;
   title: string;
   content: string;
-  category: 'customer' | 'reservation' | 'staff' | 'incident' | 'other';
+  category: NoteCategory;
   isStarred: boolean;
   customerId?: string;
   reservationId?: string;
