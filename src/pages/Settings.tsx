@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -42,7 +43,7 @@ const Settings: React.FC = () => {
     // Load tables from local storage on component mount
     const storedTables = localStorage.getItem('tables');
     if (storedTables) {
-      setTables(JSON.parse(storedTables));
+      setTables(JSON.parse(storedTables) as TableType[]);
     } else {
       // Initialize with default tables if nothing is stored
       setTables(defaultTables);
@@ -54,7 +55,7 @@ const Settings: React.FC = () => {
     localStorage.setItem('tables', JSON.stringify(tables));
   }, [tables]);
 
-  const defaultTables = [
+  const defaultTables: TableType[] = [
     { id: 'table-1', number: 1, capacity: 4, status: 'available', location: 'Main', section: 'Main' },
     { id: 'table-2', number: 2, capacity: 2, status: 'available', location: 'Bar', section: 'Bar' }, 
     { id: 'table-3', number: 3, capacity: 6, status: 'available', location: 'Patio', section: 'Patio' },
@@ -69,11 +70,11 @@ const Settings: React.FC = () => {
       return;
     }
 
-    const newTable = {
+    const newTable: TableType = {
       id: `table-${Date.now()}`,
       number: tables.length + 1,
       capacity: Number(capacity),
-      status: 'available',
+      status: 'available' as const,
       location: location,
       section: location // Using location as section for now
     };
