@@ -56,12 +56,12 @@ const Settings: React.FC = () => {
   }, [tables]);
 
   const defaultTables: TableType[] = [
-    { id: 'table-1', number: 1, capacity: 4, status: 'available', location: 'Main', section: 'Main' },
-    { id: 'table-2', number: 2, capacity: 2, status: 'available', location: 'Bar', section: 'Bar' }, 
-    { id: 'table-3', number: 3, capacity: 6, status: 'available', location: 'Patio', section: 'Patio' },
-    { id: 'table-4', number: 4, capacity: 8, status: 'available', location: 'Main', section: 'Main' },
-    { id: 'table-5', number: 5, capacity: 4, status: 'available', location: 'Private', section: 'Private' },
-    { id: 'table-6', number: 6, capacity: 2, status: 'available', location: 'Bar', section: 'Bar' }
+    { id: 'table-1', number: 1, capacity: 4, status: 'available', location: 'Main', section: 'main' },
+    { id: 'table-2', number: 2, capacity: 2, status: 'available', location: 'Bar', section: 'bar' }, 
+    { id: 'table-3', number: 3, capacity: 6, status: 'available', location: 'Patio', section: 'outdoor' },
+    { id: 'table-4', number: 4, capacity: 8, status: 'available', location: 'Main', section: 'main' },
+    { id: 'table-5', number: 5, capacity: 4, status: 'available', location: 'Private', section: 'private' },
+    { id: 'table-6', number: 6, capacity: 2, status: 'available', location: 'Bar', section: 'bar' }
   ];
 
   const handleAddTable = () => {
@@ -76,7 +76,7 @@ const Settings: React.FC = () => {
       capacity: Number(capacity),
       status: 'available' as const,
       location: location,
-      section: location // Using location as section for now
+      section: getSectionFromLocation(location)
     };
 
     setTables([...tables, newTable]);
@@ -84,6 +84,18 @@ const Settings: React.FC = () => {
     setCapacity("");
     setIsDialogOpen(false);
     toast.success('Table added successfully!');
+  };
+
+  // Helper function to map location to valid section values
+  const getSectionFromLocation = (loc: string): "main" | "bar" | "outdoor" | "private" => {
+    const locationMap: Record<string, "main" | "bar" | "outdoor" | "private"> = {
+      "Main": "main",
+      "Bar": "bar", 
+      "Patio": "outdoor",
+      "Private": "private"
+    };
+    
+    return locationMap[loc] || "main"; // Default to "main" if location doesn't match
   };
 
   const handleDeleteTable = (tableId: string) => {
