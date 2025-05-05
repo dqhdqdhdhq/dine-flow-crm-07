@@ -13,7 +13,9 @@ import {
   PanelLeft,
   PanelRight,
   FileCog,
-  Wallet
+  Wallet,
+  Package,
+  Store
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -127,6 +129,22 @@ const Sidebar = () => {
             label="Notes"
             to="/notes"
             active={location.pathname.startsWith('/notes')}
+            collapsed={isCollapsed}
+          />
+          
+          <SidebarItem
+            icon={Package}
+            label="Inventory"
+            to="/inventory"
+            active={location.pathname.startsWith('/inventory')}
+            collapsed={isCollapsed}
+          />
+          
+          <SidebarItem
+            icon={Store}
+            label="Vendors"
+            to="/vendors"
+            active={location.pathname.startsWith('/vendors')}
             collapsed={isCollapsed}
           />
           

@@ -14,6 +14,11 @@ export interface InventoryItem {
   notes: string;
   createdAt: string;
   updatedAt: string;
+  defaultSupplierId?: string;
+  defaultSupplierName?: string;
+  cost?: number;
+  currentStock?: number;
+  lowStockThreshold?: number;
 }
 
 export type OrderStatus = 'draft' | 'ordered' | 'shipped' | 'partially-received' | 'received' | 'cancelled';
@@ -56,4 +61,25 @@ export interface Supplier {
   status: 'active' | 'inactive' | 'pending';
   createdAt: string;
   updatedAt: string;
+}
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  createdAt: string;
+  updatedAt: string;
+  isActive?: boolean;
+  lastLogin?: string;
+  avatarUrl?: string;
+}
+
+export interface Table {
+  id: string;
+  number: number;
+  capacity: number;
+  status: 'available' | 'occupied' | 'reserved' | 'unavailable';
+  location: string;
+  section: string;
 }
