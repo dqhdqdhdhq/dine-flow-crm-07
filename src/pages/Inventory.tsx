@@ -1,77 +1,98 @@
 
 import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, FileText, Package, Users } from 'lucide-react';
+import { Search, Plus, Package, AlertTriangle, TrendingDown, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import InventoryItems from '@/components/inventory/InventoryItems';
-import PurchaseOrders from '@/components/inventory/PurchaseOrders';
-import Suppliers from '@/components/inventory/Suppliers';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import InventoryOverview from '@/components/inventory/InventoryOverview';
+import InventoryCategory from '@/components/inventory/InventoryCategory';
+import InventoryItemDetail from '@/components/inventory/InventoryItemDetail';
+
+type ViewMode = 'dashboard' | 'category' | 'item-detail';
 
 const Inventory: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<ViewMode>('dashboard');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+
+  const handleCategorySelect = (category: string) => {
+    setSelectedCategory(category);
+    setViewMode('category');
+  };
+
+  const handleItemSelect = (itemId: string) => {
+    setSelectedItemId(itemId);
+    setViewMode('item-detail');
+  };
+
+  const handleBack = () => {
+    if (viewMode === 'item-detail') {
+      setViewMode('category');
+      setSelectedItemId(null);
+    } else if (viewMode === 'category') {
+      setViewMode('dashboard');
+      setSelectedCategory(null);
+    }
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Clean Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold tracking-tight">Inventory & Supplies</h1>
-        <div className="flex gap-2">
-          <Button variant="outline" className="gap-2">
-            <Plus className="h-4 w-4" />
-            New Item
-          </Button>
-          <Button variant="outline" className="gap-2">
-            <FileText className="h-4 w-4" />
-            New Purchase Order
-          </Button>
-          <Button variant="outline" className="gap-2">
-            <Users className="h-4 w-4" />
-            New Supplier
-          </Button>
+        <div className="flex items-center gap-4">
+          {viewMode !== 'dashboard' && (
+            <Button variant="ghost" onClick={handleBack} className="p-2">
+              ←
+            </Button>
+          )}
+          <h1 className="text-3xl font-bold tracking-tight">
+            {viewMode === 'dashboard' && 'Inventory'}
+            {viewMode === 'category' && selectedCategory}
+            {viewMode === 'item-detail' && 'Item Details'}
+          </h1>
         </div>
+        <Button className="gap-2 bg-black text-white hover:bg-gray-800 rounded-full px-6">
+          <Plus className="h-4 w-4" />
+          Add Item
+        </Button>
       </div>
 
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="relative w-full md:w-80">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search inventory, orders, suppliers..."
-            className="pl-8"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
+      {/* Universal Search */}
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <Input
+          type="search"
+          placeholder="Search inventory, orders, suppliers..."
+          className="pl-10 rounded-full border-gray-200 bg-gray-50 focus:bg-white transition-colors"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </div>
 
-      <Tabs defaultValue="items">
-        <TabsList className="grid grid-cols-3 mb-6">
-          <TabsTrigger value="items">
-            <Package className="mr-2 h-4 w-4" />
-            Inventory Items
-          </TabsTrigger>
-          <TabsTrigger value="orders">
-            <FileText className="mr-2 h-4 w-4" />
-            Purchase Orders
-          </TabsTrigger>
-          <TabsTrigger value="suppliers">
-            <Users className="mr-2 h-4 w-4" />
-            Suppliers
-          </TabsTrigger>
-        </TabsList>
+      {/* Dynamic Content based on view mode */}
+      {viewMode === 'dashboard' && (
+        <InventoryOverview 
+          searchQuery={searchQuery}
+          onCategorySelect={handleCategorySelect}
+          onItemSelect={handleItemSelect}
+        />
+      )}
 
-        <TabsContent value="items">
-          <InventoryItems searchQuery={searchQuery} />
-        </TabsContent>
+      {viewMode === 'category' && selectedCategory && (
+        <InventoryCategory 
+          category={selectedCategory}
+          searchQuery={searchQuery}
+          onItemSelect={handleItemSelect}
+        />
+      )}
 
-        <TabsContent value="orders">
-          <PurchaseOrders searchQuery={searchQuery} />
-        </TabsContent>
-
-        <TabsContent value="suppliers">
-          <Suppliers searchQuery={searchQuery} />
-        </TabsContent>
-      </Tabs>
+      {viewMode === 'item-detail' && selectedItemId && (
+        <InventoryItemDetail 
+          itemId={selectedItemId}
+          onBack={handleBack}
+        />
+      )}
     </div>
   );
 };
