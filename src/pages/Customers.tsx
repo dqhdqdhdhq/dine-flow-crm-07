@@ -1,16 +1,13 @@
-
 import React, { useState } from 'react';
 import { mockCustomers } from '@/data/mockData';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Plus, Search, Filter, SlidersHorizontal } from 'lucide-react';
+import { Plus, Search, SlidersHorizontal, Circle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
   CardTitle,
   CardFooter,
 } from '@/components/ui/card';
@@ -27,11 +24,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const Customers: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [tagFilter, setTagFilter] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<string>('name');
+  const [sortBy, setSortBy] = useState<string>('lastVisit');
   const [hasAllergies, setHasAllergies] = useState<boolean | null>(null);
   
   // Get unique tags from all customers
@@ -115,63 +113,69 @@ const Customers: React.FC = () => {
         </div>
         
         <div className="flex flex-wrap gap-2">
-          <Select value={tagFilter} onValueChange={setTagFilter}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="All Tags" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Tags</SelectItem>
-              {allTags.map((tag) => (
-                <SelectItem key={tag} value={tag}>{tag}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Sort By" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="name">Name</SelectItem>
-              <SelectItem value="visits">Most Visits</SelectItem>
-              <SelectItem value="lastVisit">Recent Visit</SelectItem>
-              <SelectItem value="loyaltyPoints">Loyalty Points</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="h-10">
-                <SlidersHorizontal className="mr-2 h-4 w-4" />
-                More Filters
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[200px] p-4">
-              <div className="space-y-4">
-                <h4 className="font-medium">Dietary Restrictions</h4>
-                <div className="flex flex-col gap-2">
-                  <Button 
-                    variant={hasAllergies === true ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setHasAllergies(hasAllergies === true ? null : true)}
-                  >
-                    Has Allergies
-                  </Button>
-                  <Button 
-                    variant={hasAllergies === false ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setHasAllergies(hasAllergies === false ? null : false)}
-                  >
-                    No Allergies
-                  </Button>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline">
+                  <SlidersHorizontal className="mr-2 h-4 w-4" />
+                  Filter & Sort
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[280px] p-4 space-y-4">
+                  <div>
+                    <h4 className="font-medium text-sm mb-2">Sort By</h4>
+                    <Select value={sortBy} onValueChange={setSortBy}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sort By" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="lastVisit">Recent Visit</SelectItem>
+                        <SelectItem value="name">Name</SelectItem>
+                        <SelectItem value="visits">Most Visits</SelectItem>
+                        <SelectItem value="loyaltyPoints">Loyalty Points</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-medium text-sm mb-2">Filter by Tag</h4>
+                    <Select value={tagFilter} onValueChange={setTagFilter}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Tags" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Tags</SelectItem>
+                        {allTags.map((tag) => (
+                          <SelectItem key={tag} value={tag}>{tag}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-medium text-sm mb-2">Dietary Restrictions</h4>
+                    <div className="flex flex-col gap-2">
+                      <Button 
+                        variant={hasAllergies === true ? "secondary" : "outline"}
+                        size="sm"
+                        onClick={() => setHasAllergies(hasAllergies === true ? null : true)}
+                      >
+                        Has Allergies
+                      </Button>
+                      <Button 
+                        variant={hasAllergies === false ? "secondary" : "outline"}
+                        size="sm"
+                        onClick={() => setHasAllergies(hasAllergies === false ? null : false)}
+                      >
+                        No Allergies
+                      </Button>
+                    </div>
+                  </div>
+                </PopoverContent>
+            </Popover>
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {sortedCustomers.length > 0 ? (
           sortedCustomers.map((customer) => (
             <CustomerCard key={customer.id} customer={customer} badgeStyle={getBadgeStyle} />
@@ -192,42 +196,34 @@ interface CustomerCardProps {
 }
 
 const CustomerCard: React.FC<CustomerCardProps> = ({ customer, badgeStyle }) => {
+  const mainTag = customer.tags[0];
+  const initials = `${customer.firstName[0]}${customer.lastName[0]}`;
+  const hasAllergies = customer.allergies.length > 0;
+
   return (
-    <Link to={`/customers/${customer.id}`}>
-      <Card className="customer-card h-full hover:shadow-md transition-all">
-        <CardHeader className="pb-2">
-          <CardTitle>{customer.firstName} {customer.lastName}</CardTitle>
-          <CardDescription>{customer.email}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2 pb-0">
-          <p className="text-sm">{customer.phone}</p>
-          <div className="flex flex-wrap gap-1">
-            {customer.tags.map((tag, i) => (
-              <Badge key={i} className={badgeStyle(tag)}>
-                {tag}
+    <Link to={`/customers/${customer.id}`} className="block h-full">
+      <Card className="customer-card h-full hover:shadow-lg transition-shadow duration-300 group bg-card">
+        <CardContent className="p-4 flex items-center gap-4">
+          <Avatar className="h-12 w-12">
+            <AvatarImage src={customer.avatarUrl} alt={`${customer.firstName} ${customer.lastName}`} />
+            <AvatarFallback>{initials}</AvatarFallback>
+          </Avatar>
+          <div className="flex-1 overflow-hidden">
+            <h4 className="text-base font-semibold truncate" title={`${customer.firstName} ${customer.lastName}`}>{customer.firstName} {customer.lastName}</h4>
+            {mainTag && (
+              <Badge variant="secondary" className={`mt-1 ${badgeStyle(mainTag)}`}>
+                {mainTag}
               </Badge>
-            ))}
+            )}
           </div>
-          {customer.allergies.length > 0 && (
-            <div>
-              <p className="text-xs font-medium text-red-600">Allergies:</p>
-              <p className="text-xs text-gray-600">{customer.allergies.join(', ')}</p>
-            </div>
-          )}
-          {customer.preferences.length > 0 && (
-            <div>
-              <p className="text-xs font-medium text-gray-600">Preferences:</p>
-              <p className="text-xs text-gray-600">{customer.preferences.join(', ')}</p>
+          {hasAllergies && (
+            <div title="This customer has allergies.">
+              <Circle className="h-3 w-3 text-red-500 fill-red-500 flex-shrink-0" />
             </div>
           )}
         </CardContent>
-        <CardFooter className="pt-4 flex justify-between">
-          <div className="text-xs text-muted-foreground">
-            {customer.visits} {customer.visits === 1 ? 'visit' : 'visits'}
-          </div>
-          <div className="text-xs text-muted-foreground">
-            Last visit: {customer.lastVisit ? new Date(customer.lastVisit).toLocaleDateString() : 'Never'}
-          </div>
+        <CardFooter className="p-4 pt-0 text-xs text-muted-foreground">
+          <span>Last visit: {customer.lastVisit ? new Date(customer.lastVisit).toLocaleDateString() : 'Never'}</span>
         </CardFooter>
       </Card>
     </Link>

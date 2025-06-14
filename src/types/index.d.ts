@@ -1,4 +1,21 @@
 
+export interface Customer {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  tags: string[];
+  allergies: string[];
+  preferences: string[];
+  visits: number;
+  lastVisit: string | null;
+  loyaltyPoints: number;
+  createdAt: string;
+  notes?: string;
+  avatarUrl?: string;
+}
+
 export interface InventoryItem {
   id: string;
   name: string;
