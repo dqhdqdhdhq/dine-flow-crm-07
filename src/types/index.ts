@@ -102,6 +102,7 @@ export interface InventoryItem {
   currentStock?: number; // Added for backward compatibility
   lowStockThreshold?: number; // Added for backward compatibility
   cost?: number; // Added for backward compatibility
+  imageUrl?: string;
   createdAt: string;
   updatedAt: string;
 }

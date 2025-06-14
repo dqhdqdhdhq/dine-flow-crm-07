@@ -23,9 +23,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { v4 as uuidv4 } from 'uuid';
+import { Image as ImageIcon } from 'lucide-react';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+  imageUrl: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
   category: z.string().min(2, { message: "Category is required." }),
   unit: z.string().min(1, { message: "Unit is required (e.g., kg, bottle, item)." }),
   currentStock: z.coerce.number().min(0, { message: "Stock cannot be negative." }).default(0),
@@ -53,6 +55,7 @@ const AddInventoryItemDialog: React.FC<AddInventoryItemDialogProps> = ({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
+      imageUrl: '',
       category: '',
       unit: '',
       currentStock: 0,
@@ -63,6 +66,8 @@ const AddInventoryItemDialog: React.FC<AddInventoryItemDialogProps> = ({
       defaultSupplierName: '',
     },
   });
+
+  const imageUrlValue = form.watch('imageUrl');
 
   const onSubmit = (values: AddItemFormValues) => {
     const newItem = {
@@ -87,19 +92,43 @@ const AddInventoryItemDialog: React.FC<AddInventoryItemDialogProps> = ({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Item Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Parmigiano Reggiano" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="flex flex-col sm:flex-row gap-6 items-start">
+              <div className="w-full sm:w-32 sm:h-32 h-32 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                {imageUrlValue ? (
+                  <img src={imageUrlValue} alt="Item preview" className="w-full h-full object-cover rounded-lg"/>
+                ) : (
+                  <ImageIcon className="w-12 h-12 text-gray-400" />
+                )}
+              </div>
+              <div className="flex-grow space-y-4 w-full">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Item Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Parmigiano Reggiano" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="imageUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Image URL</FormLabel>
+                      <FormControl>
+                        <Input placeholder="https://example.com/image.png" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
             
             <FormField
               control={form.control}
@@ -229,4 +258,3 @@ const AddInventoryItemDialog: React.FC<AddInventoryItemDialogProps> = ({
 };
 
 export default AddInventoryItemDialog;
-
