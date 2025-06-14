@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -23,6 +23,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { Supplier } from '@/types';
 
 // Form schema validation
 const vendorFormSchema = z.object({
@@ -38,13 +39,15 @@ const vendorFormSchema = z.object({
 interface AddVendorDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onVendorAdded?: (vendor: any) => void;
+  onVendorAdded?: (vendor: Supplier) => void;
+  editingVendor?: Supplier | null;
 }
 
 const AddVendorDialog: React.FC<AddVendorDialogProps> = ({ 
   open, 
   onOpenChange,
-  onVendorAdded 
+  onVendorAdded,
+  editingVendor
 }) => {
   const form = useForm<z.infer<typeof vendorFormSchema>>({
     resolver: zodResolver(vendorFormSchema),
@@ -59,28 +62,53 @@ const AddVendorDialog: React.FC<AddVendorDialogProps> = ({
     },
   });
 
+  // Reset form when editing vendor changes
+  useEffect(() => {
+    if (editingVendor && open) {
+      form.reset({
+        name: editingVendor.name,
+        contactPerson: editingVendor.contactPerson,
+        phone: editingVendor.phone,
+        email: editingVendor.email,
+        address: editingVendor.address,
+        productsSupplied: editingVendor.productsSupplied.join(', '),
+        status: editingVendor.status || 'active',
+      });
+    } else if (!editingVendor && open) {
+      form.reset({
+        name: '',
+        contactPerson: '',
+        phone: '',
+        email: '',
+        address: '',
+        productsSupplied: '',
+        status: 'active',
+      });
+    }
+  }, [editingVendor, open, form]);
+
   function onSubmit(values: z.infer<typeof vendorFormSchema>) {
     // Process the products supplied string into an array
     const productsArray = values.productsSupplied 
       ? values.productsSupplied.split(',').map(product => product.trim())
       : [];
     
-    // Create a new vendor object
-    const newVendor = {
-      id: `supplier-${Date.now()}`,
+    // Create a new vendor object or update existing one
+    const vendorData = {
+      id: editingVendor?.id || `supplier-${Date.now()}`,
       ...values,
       productsSupplied: productsArray,
-      createdAt: new Date().toISOString(),
+      createdAt: editingVendor?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
     
-    // Call the callback to add the vendor
+    // Call the callback to add/update the vendor
     if (onVendorAdded) {
-      onVendorAdded(newVendor);
+      onVendorAdded(vendorData);
     }
     
     // Show success notification
-    toast.success("Vendor added successfully");
+    toast.success(editingVendor ? "Vendor updated successfully" : "Vendor added successfully");
     
     // Close the dialog
     onOpenChange(false);
@@ -93,9 +121,12 @@ const AddVendorDialog: React.FC<AddVendorDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
-          <DialogTitle>Add New Vendor</DialogTitle>
+          <DialogTitle>{editingVendor ? 'Edit Vendor' : 'Add New Vendor'}</DialogTitle>
           <DialogDescription>
-            Fill out the form below to add a new vendor to your system.
+            {editingVendor 
+              ? 'Update the vendor information below.'
+              : 'Fill out the form below to add a new vendor to your system.'
+            }
           </DialogDescription>
         </DialogHeader>
         
@@ -215,7 +246,9 @@ const AddVendorDialog: React.FC<AddVendorDialogProps> = ({
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit">Add Vendor</Button>
+              <Button type="submit">
+                {editingVendor ? 'Update Vendor' : 'Add Vendor'}
+              </Button>
             </DialogFooter>
           </form>
         </Form>

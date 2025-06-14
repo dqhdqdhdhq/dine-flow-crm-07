@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -53,13 +53,15 @@ interface AddPurchaseOrderDialogProps {
   onOpenChange: (open: boolean) => void;
   suppliers: Supplier[];
   onOrderAdded?: (order: PurchaseOrder) => void;
+  preSelectedVendorId?: string | null;
 }
 
 const AddPurchaseOrderDialog: React.FC<AddPurchaseOrderDialogProps> = ({ 
   open, 
   onOpenChange,
   suppliers,
-  onOrderAdded
+  onOrderAdded,
+  preSelectedVendorId
 }) => {
   const [items, setItems] = useState<{ name: string; quantity: number; unit: string; unitPrice: number }[]>([
     { name: '', quantity: 1, unit: '', unitPrice: 0 }
@@ -76,6 +78,13 @@ const AddPurchaseOrderDialog: React.FC<AddPurchaseOrderDialogProps> = ({
       items: [{ name: '', quantity: 1, unit: '', unitPrice: 0 }]
     },
   });
+
+  // Set pre-selected vendor when dialog opens
+  useEffect(() => {
+    if (preSelectedVendorId && open) {
+      form.setValue('supplierId', preSelectedVendorId);
+    }
+  }, [preSelectedVendorId, open, form]);
 
   // Watch for supplier selection changes
   const selectedSupplierId = form.watch('supplierId');
