@@ -1,4 +1,3 @@
-
 // User-related types
 export interface User {
   id: string;
@@ -27,6 +26,7 @@ export interface Customer {
   loyaltyPoints?: number;
   createdAt?: string;
   updatedAt?: string;
+  avatarUrl?: string;
 }
 
 export type FeedbackType = 'positive' | 'negative' | 'suggestion';

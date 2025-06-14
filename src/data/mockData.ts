@@ -52,7 +52,8 @@ export const mockCustomers: Customer[] = [
     notes: 'Prefers quiet areas of the restaurant.',
     loyaltyPoints: 450,
     createdAt: '2024-06-10T00:00:00Z',
-    updatedAt: '2025-04-15T00:00:00Z'
+    updatedAt: '2025-04-15T00:00:00Z',
+    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emily'
   },
   {
     id: 'customer-002',
@@ -70,7 +71,8 @@ export const mockCustomers: Customer[] = [
     notes: '',
     loyaltyPoints: 150,
     createdAt: '2024-12-05T00:00:00Z',
-    updatedAt: '2025-04-26T00:00:00Z'
+    updatedAt: '2025-04-26T00:00:00Z',
+    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Michael'
   },
   {
     id: 'customer-003',
@@ -88,7 +90,8 @@ export const mockCustomers: Customer[] = [
     notes: 'Has a sophisticated palate, appreciates wine recommendations.',
     loyaltyPoints: 780,
     createdAt: '2024-03-15T00:00:00Z',
-    updatedAt: '2025-04-30T00:00:00Z'
+    updatedAt: '2025-04-30T00:00:00Z',
+    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sophia'
   },
   {
     id: 'customer-004',
@@ -106,7 +109,8 @@ export const mockCustomers: Customer[] = [
     notes: 'First time visitor, mentioned it was for a business meeting.',
     loyaltyPoints: 50,
     createdAt: '2025-05-01T00:00:00Z',
-    updatedAt: '2025-05-01T00:00:00Z'
+    updatedAt: '2025-05-01T00:00:00Z',
+    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=David'
   },
   {
     id: 'customer-005',
@@ -124,7 +128,8 @@ export const mockCustomers: Customer[] = [
     notes: 'Celebrates birthday at our restaurant annually.',
     loyaltyPoints: 320,
     createdAt: '2024-09-30T00:00:00Z',
-    updatedAt: '2025-04-20T00:00:00Z'
+    updatedAt: '2025-04-20T00:00:00Z',
+    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Olivia'
   }
 ];
 

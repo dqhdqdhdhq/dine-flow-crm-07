@@ -2,15 +2,8 @@ import React, { useState } from 'react';
 import { mockCustomers } from '@/data/mockData';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Plus, Search, SlidersHorizontal, Circle } from 'lucide-react';
+import { Plus, Search, SlidersHorizontal } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Badge } from '@/components/ui/badge';
-import {
-  Card,
-  CardContent,
-  CardTitle,
-  CardFooter,
-} from '@/components/ui/card';
 import { Customer } from '@/types';
 import {
   Select,
@@ -24,7 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import CustomerCard from '@/components/customers/CustomerCard';
 
 const Customers: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -34,7 +27,7 @@ const Customers: React.FC = () => {
   
   // Get unique tags from all customers
   const allTags = Array.from(
-    new Set(mockCustomers.flatMap(customer => customer.tags))
+    new Set(mockCustomers.flatMap(customer => customer.tags || []))
   ).sort();
   
   const filteredCustomers = mockCustomers.filter(customer => {
@@ -43,15 +36,15 @@ const Customers: React.FC = () => {
       customer.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       customer.phone.includes(searchTerm) ||
-      customer.preferences.some(pref => pref.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      customer.allergies.some(allergy => allergy.toLowerCase().includes(searchTerm.toLowerCase()));
+      (customer.preferences || []).some(pref => pref.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (customer.allergies || []).some(allergy => allergy.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const matchesTag = tagFilter === 'all' || customer.tags.includes(tagFilter);
+    const matchesTag = tagFilter === 'all' || (customer.tags || []).includes(tagFilter);
     
     const matchesAllergies = 
       hasAllergies === null || 
-      (hasAllergies === true && customer.allergies.length > 0) ||
-      (hasAllergies === false && customer.allergies.length === 0);
+      (hasAllergies === true && (customer.allergies || []).length > 0) ||
+      (hasAllergies === false && (customer.allergies || []).length === 0);
     
     return matchesSearch && matchesTag && matchesAllergies;
   });
@@ -69,24 +62,11 @@ const Customers: React.FC = () => {
         if (!b.lastVisit) return -1;
         return new Date(b.lastVisit).getTime() - new Date(a.lastVisit).getTime(); // Most recent first
       case 'loyaltyPoints':
-        return b.loyaltyPoints - a.loyaltyPoints; // Most points first
+        return (b.loyaltyPoints || 0) - (a.loyaltyPoints || 0); // Most points first
       default:
         return 0;
     }
   });
-  
-  const getBadgeStyle = (tag: string) => {
-    switch (tag.toLowerCase()) {
-      case 'vip':
-        return 'bg-amber-100 text-amber-800 border-amber-300';
-      case 'regular':
-        return 'bg-blue-100 text-blue-800 border-blue-300';
-      case 'new customer':
-        return 'bg-emerald-100 text-emerald-800 border-emerald-300';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-300';
-    }
-  };
   
   return (
     <div className="space-y-6 animate-fade-in">
@@ -178,7 +158,7 @@ const Customers: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {sortedCustomers.length > 0 ? (
           sortedCustomers.map((customer) => (
-            <CustomerCard key={customer.id} customer={customer} badgeStyle={getBadgeStyle} />
+            <CustomerCard key={customer.id} customer={customer} />
           ))
         ) : (
           <p className="col-span-full text-center py-8 text-muted-foreground">
@@ -187,46 +167,6 @@ const Customers: React.FC = () => {
         )}
       </div>
     </div>
-  );
-};
-
-interface CustomerCardProps {
-  customer: Customer;
-  badgeStyle: (tag: string) => string;
-}
-
-const CustomerCard: React.FC<CustomerCardProps> = ({ customer, badgeStyle }) => {
-  const mainTag = customer.tags[0];
-  const initials = `${customer.firstName[0]}${customer.lastName[0]}`;
-  const hasAllergies = customer.allergies.length > 0;
-
-  return (
-    <Link to={`/customers/${customer.id}`} className="block h-full">
-      <Card className="customer-card h-full hover:shadow-lg transition-shadow duration-300 group bg-card">
-        <CardContent className="p-4 flex items-center gap-4">
-          <Avatar className="h-12 w-12">
-            <AvatarImage src={customer.avatarUrl} alt={`${customer.firstName} ${customer.lastName}`} />
-            <AvatarFallback>{initials}</AvatarFallback>
-          </Avatar>
-          <div className="flex-1 overflow-hidden">
-            <h4 className="text-base font-semibold truncate" title={`${customer.firstName} ${customer.lastName}`}>{customer.firstName} {customer.lastName}</h4>
-            {mainTag && (
-              <Badge variant="secondary" className={`mt-1 ${badgeStyle(mainTag)}`}>
-                {mainTag}
-              </Badge>
-            )}
-          </div>
-          {hasAllergies && (
-            <div title="This customer has allergies.">
-              <Circle className="h-3 w-3 text-red-500 fill-red-500 flex-shrink-0" />
-            </div>
-          )}
-        </CardContent>
-        <CardFooter className="p-4 pt-0 text-xs text-muted-foreground">
-          <span>Last visit: {customer.lastVisit ? new Date(customer.lastVisit).toLocaleDateString() : 'Never'}</span>
-        </CardFooter>
-      </Card>
-    </Link>
   );
 };
 
