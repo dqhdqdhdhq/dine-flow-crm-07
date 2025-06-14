@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,6 +23,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { v4 as uuidv4 } from 'uuid';
+import { InventoryItem } from '@/types';
 import { Image as ImageIcon, X } from 'lucide-react';
 
 const formSchema = z.object({
@@ -41,15 +43,17 @@ type AddItemFormValues = z.infer<typeof formSchema>;
 interface AddInventoryItemDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onAddItem: (item: any) => void; // Use more specific type in real app
+  onSaveItem: (item: any) => void;
   category?: string | null;
+  itemToEdit?: InventoryItem | null;
 }
 
 const AddInventoryItemDialog: React.FC<AddInventoryItemDialogProps> = ({
   isOpen,
   onOpenChange,
-  onAddItem,
+  onSaveItem,
   category,
+  itemToEdit,
 }) => {
   const form = useForm<AddItemFormValues>({
     resolver: zodResolver(formSchema),
@@ -66,33 +70,47 @@ const AddInventoryItemDialog: React.FC<AddInventoryItemDialogProps> = ({
     },
   });
 
-  // State for handling image file and preview
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Clean up preview URL and reset form when dialog opens/closes
   React.useEffect(() => {
     if (isOpen) {
-      form.reset({
-        name: '',
-        category: category || '',
-        unit: '',
-        currentStock: 0,
-        cost: 0,
-        lowStockThreshold: 0,
-        sku: '',
-        description: '',
-        defaultSupplierName: '',
-      });
+      if (itemToEdit) {
+        form.reset({
+          ...itemToEdit,
+          lowStockThreshold: itemToEdit.lowStockThreshold ?? 0,
+          cost: itemToEdit.cost ?? 0,
+          currentStock: itemToEdit.currentStock ?? 0,
+        });
+        if (itemToEdit.imageUrl) {
+          setImagePreview(itemToEdit.imageUrl);
+          setImageFile(null);
+        }
+      } else {
+        form.reset({
+          name: '',
+          category: category || '',
+          unit: '',
+          currentStock: 0,
+          cost: 0,
+          lowStockThreshold: 0,
+          sku: '',
+          description: '',
+          defaultSupplierName: '',
+        });
+        setImageFile(null);
+        setImagePreview(null);
+      }
     } else {
       setImageFile(null);
-      // We don't revoke the object URL here, so it can be displayed in the list.
       setImagePreview(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
-  }, [isOpen, category, form]);
+  }, [isOpen, category, form, itemToEdit]);
 
-  // Handle file input change
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -104,10 +122,14 @@ const AddInventoryItemDialog: React.FC<AddInventoryItemDialogProps> = ({
     }
   };
 
-  // Remove selected image
   const handleRemoveImage = () => {
     setImageFile(null);
-    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    if (imagePreview) {
+      // only revoke if it's a blob url
+      if (imagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    }
     setImagePreview(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -115,20 +137,23 @@ const AddInventoryItemDialog: React.FC<AddInventoryItemDialogProps> = ({
   };
 
   const onSubmit = (values: AddItemFormValues) => {
-    const newItem = {
+    let finalImageUrl = itemToEdit?.imageUrl; // Keep old image by default
+    if (imageFile) {
+      finalImageUrl = imagePreview ?? undefined;
+    } else if (imagePreview === null) {
+      finalImageUrl = undefined;
+    }
+
+    const itemData = {
       ...values,
-      id: uuidv4(),
-      createdAt: new Date().toISOString(),
+      id: itemToEdit?.id || uuidv4(),
+      createdAt: itemToEdit?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      // Store preview URL for now; in real app upload the file and save the returned URL
-      imageFile: imageFile || null,
-      imagePreview: imagePreview || null,
+      // In a real app, you'd upload the file and save the returned URL
+      // For now, we pass the preview URL to be used as the image URL
+      imagePreview: finalImageUrl,
     };
-    onAddItem(newItem);
-    form.reset();
-    setImageFile(null);
-    // We don't revoke the object URL here, so it can be displayed in the list.
-    setImagePreview(null);
+    onSaveItem(itemData);
     onOpenChange(false);
   };
 
@@ -136,9 +161,9 @@ const AddInventoryItemDialog: React.FC<AddInventoryItemDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Inventory Item</DialogTitle>
+          <DialogTitle>{itemToEdit ? 'Edit Inventory Item' : 'Add New Inventory Item'}</DialogTitle>
           <DialogDescription>
-            Fill in the details below to add a new item to your inventory.
+            {itemToEdit ? 'Update the details for this item.' : 'Fill in the details below to add a new item to your inventory.'}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -175,7 +200,6 @@ const AddInventoryItemDialog: React.FC<AddInventoryItemDialogProps> = ({
                   </div>
                 )}
               </div>
-              {/* Main item fields */}
               <div className="flex-grow space-y-4 w-full">
                 <FormField
                   control={form.control}
@@ -311,7 +335,7 @@ const AddInventoryItemDialog: React.FC<AddInventoryItemDialogProps> = ({
               <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit">Add Item</Button>
+              <Button type="submit">{itemToEdit ? 'Save Changes' : 'Add Item'}</Button>
             </DialogFooter>
           </form>
         </Form>

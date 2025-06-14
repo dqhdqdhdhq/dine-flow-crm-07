@@ -92,6 +92,7 @@ const Inventory: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [itemToEdit, setItemToEdit] = useState<InventoryItem | null>(null);
 
   const handleCategorySelect = (category: string) => {
     setSelectedCategory(category);
@@ -113,24 +114,60 @@ const Inventory: React.FC = () => {
     }
   };
 
-  const handleAddItem = (item: Omit<InventoryItem, 'imageUrl'> & { imagePreview?: string | null }) => {
-    console.log('New item to be added:', item);
-    const newItem: InventoryItem = {
-      ...item,
-      imageUrl: item.imagePreview || undefined,
-    };
-    
-    // Clean up properties that are not part of InventoryItem
-    delete (newItem as any).imagePreview;
-    delete (newItem as any).imageFile;
-
-    setInventoryItems(prevItems => [...prevItems, newItem]);
-    toast.success(`${item.name} has been added to inventory.`);
+  const handleOpenAddDialog = () => {
+    setItemToEdit(null);
+    setIsAddDialogOpen(true);
   };
+
+  const handleOpenEditDialog = (item: InventoryItem) => {
+    setItemToEdit(item);
+    setIsAddDialogOpen(true);
+  };
+  
+  const handleSaveItem = (itemData: any) => {
+    const itemExists = inventoryItems.some(i => i.id === itemData.id);
+    
+    const finalItem: InventoryItem = {
+      ...itemData,
+      imageUrl: itemData.imagePreview,
+    };
+    delete (finalItem as any).imagePreview;
+
+    if (itemExists) {
+      setInventoryItems(prev =>
+        prev.map(i => (i.id === finalItem.id ? finalItem : i))
+      );
+      toast.success(`${finalItem.name} has been updated.`);
+    } else {
+      setInventoryItems(prev => [...prev, finalItem]);
+      toast.success(`${finalItem.name} has been added to inventory.`);
+    }
+    setItemToEdit(null);
+  };
+
+  const handleStockUpdate = (itemId: string, quantityChange: number) => {
+    let itemName = '';
+    setInventoryItems(prevItems =>
+      prevItems.map(item => {
+        if (item.id === itemId) {
+          itemName = item.name;
+          const newStock = (item.currentStock ?? 0) + quantityChange;
+          return { 
+            ...item, 
+            currentStock: newStock < 0 ? 0 : newStock, 
+            updatedAt: new Date().toISOString() 
+          };
+        }
+        return item;
+      })
+    );
+    toast.success(`Stock for ${itemName} has been updated.`);
+  };
+
+  const selectedItem = inventoryItems.find(item => item.id === selectedItemId);
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Clean Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           {viewMode !== 'dashboard' && (
@@ -145,7 +182,7 @@ const Inventory: React.FC = () => {
           </h1>
         </div>
         <Button
-          onClick={() => setIsAddDialogOpen(true)}
+          onClick={handleOpenAddDialog}
           className="gap-2 bg-black text-white hover:bg-gray-800 rounded-full px-6"
         >
           <Plus className="h-4 w-4" />
@@ -153,7 +190,6 @@ const Inventory: React.FC = () => {
         </Button>
       </div>
 
-      {/* Universal Search */}
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
         <Input
@@ -165,7 +201,6 @@ const Inventory: React.FC = () => {
         />
       </div>
 
-      {/* Dynamic Content based on view mode */}
       {viewMode === 'dashboard' && (
         <InventoryOverview 
           inventoryItems={inventoryItems}
@@ -183,7 +218,7 @@ const Inventory: React.FC = () => {
                   (item.currentStock ?? 0) < (item.lowStockThreshold ?? 0)
                 )
               : selectedCategory === 'Pending Orders'
-              ? [] // No data model for this yet
+              ? []
               : inventoryItems.filter(item => item.category === selectedCategory)
           }
           searchQuery={searchQuery}
@@ -191,18 +226,26 @@ const Inventory: React.FC = () => {
         />
       )}
 
-      {viewMode === 'item-detail' && selectedItemId && (
+      {viewMode === 'item-detail' && selectedItemId && selectedItem && (
         <InventoryItemDetail 
-          itemId={selectedItemId}
+          item={selectedItem}
           onBack={handleBack}
+          onEdit={() => handleOpenEditDialog(selectedItem)}
+          onStockUpdate={handleStockUpdate}
         />
       )}
 
       <AddInventoryItemDialog
         isOpen={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
-        onAddItem={handleAddItem}
+        onOpenChange={(isOpen) => {
+          setIsAddDialogOpen(isOpen);
+          if (!isOpen) {
+            setItemToEdit(null);
+          }
+        }}
+        onSaveItem={handleSaveItem}
         category={selectedCategory}
+        itemToEdit={itemToEdit}
       />
     </div>
   );
