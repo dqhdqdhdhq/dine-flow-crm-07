@@ -30,6 +30,8 @@ const Vendors: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
   const [showSearch, setShowSearch] = useState(false);
+  const [activeTab, setActiveTab] = useState('list');
+  const [editingVendor, setEditingVendor] = useState<Supplier | null>(null);
   const [visibleColumns, setVisibleColumns] = useState({
     name: true,
     contactPerson: true,
@@ -44,6 +46,7 @@ const Vendors: React.FC = () => {
   // Dialog states
   const [addVendorDialogOpen, setAddVendorDialogOpen] = useState(false);
   const [addPurchaseOrderDialogOpen, setAddPurchaseOrderDialogOpen] = useState(false);
+  const [selectedVendorForPO, setSelectedVendorForPO] = useState<string | null>(null);
 
   // Status filter options for vendors
   const handleStatusFilterChange = (status: string) => {
@@ -64,21 +67,51 @@ const Vendors: React.FC = () => {
   
   // Handle adding a new vendor
   const handleAddVendor = (newVendor: Supplier) => {
-    setSuppliers(prev => [newVendor, ...prev]);
-    toast.success(`Vendor ${newVendor.name} added successfully`);
+    if (editingVendor) {
+      setSuppliers(prev => prev.map(v => v.id === editingVendor.id ? newVendor : v));
+      toast.success(`Vendor ${newVendor.name} updated successfully`);
+      setEditingVendor(null);
+    } else {
+      setSuppliers(prev => [newVendor, ...prev]);
+      toast.success(`Vendor ${newVendor.name} added successfully`);
+    }
   };
   
   // Handle adding a new purchase order
   const handleAddPurchaseOrder = (newOrder: PurchaseOrder) => {
     setPurchaseOrders(prev => [newOrder, ...prev]);
     toast.success(`Purchase order for ${newOrder.supplierName} created successfully`);
+    setSelectedVendorForPO(null);
+  };
+
+  // Handle vendor card actions
+  const handleViewDashboard = (vendorId: string) => {
+    setSelectedVendor(vendorId);
+    setActiveTab('dashboard');
+    toast.success('Switched to vendor dashboard');
+  };
+
+  const handleEditVendor = (vendor: Supplier) => {
+    setEditingVendor(vendor);
+    setAddVendorDialogOpen(true);
+  };
+
+  const handleCreatePurchaseOrder = (vendorId: string) => {
+    setSelectedVendorForPO(vendorId);
+    setAddPurchaseOrderDialogOpen(true);
+  };
+
+  const handleViewOrderHistory = (vendorId: string) => {
+    setSelectedVendor(vendorId);
+    setActiveTab('timeline');
+    toast.success('Switched to order history');
   };
 
   // Get primary action based on context
   const getPrimaryAction = () => {
-    if (selectedVendor) {
+    if (selectedVendor && activeTab === 'dashboard') {
       return (
-        <Button className="gap-2" onClick={() => setAddPurchaseOrderDialogOpen(true)}>
+        <Button className="gap-2" onClick={() => handleCreatePurchaseOrder(selectedVendor)}>
           <FileText className="h-4 w-4" />
           Create Purchase Order
         </Button>
@@ -197,7 +230,7 @@ const Vendors: React.FC = () => {
         </div>
       )}
 
-      <Tabs defaultValue="list">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <TabsList className="grid grid-cols-4">
             <TabsTrigger value="list">
@@ -219,61 +252,63 @@ const Vendors: React.FC = () => {
           </TabsList>
 
           {/* View Mode Toggle - only show in list tab */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant={viewMode === 'cards' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('cards')}
-            >
-              <Grid className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-            >
-              <List className="h-4 w-4" />
-            </Button>
-            
-            {viewMode === 'list' && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-9 gap-1">
-                    <SlidersHorizontal className="h-4 w-4" />
-                    Columns
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem disabled className="font-medium">Toggle Columns</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuCheckboxItem
-                    checked={visibleColumns.name}
-                    onCheckedChange={() => toggleColumn('name')}
-                  >
-                    Vendor Name
-                  </DropdownMenuCheckboxItem>
-                  <DropdownMenuCheckboxItem
-                    checked={visibleColumns.contactPerson}
-                    onCheckedChange={() => toggleColumn('contactPerson')}
-                  >
-                    Contact Person
-                  </DropdownMenuCheckboxItem>
-                  <DropdownMenuCheckboxItem
-                    checked={visibleColumns.contactInfo}
-                    onCheckedChange={() => toggleColumn('contactInfo')}
-                  >
-                    Contact Info
-                  </DropdownMenuCheckboxItem>
-                  <DropdownMenuCheckboxItem
-                    checked={visibleColumns.productsSupplied}
-                    onCheckedChange={() => toggleColumn('productsSupplied')}
-                  >
-                    Products Supplied
-                  </DropdownMenuCheckboxItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </div>
+          {activeTab === 'list' && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant={viewMode === 'cards' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('cards')}
+              >
+                <Grid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+              
+              {viewMode === 'list' && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-9 gap-1">
+                      <SlidersHorizontal className="h-4 w-4" />
+                      Columns
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem disabled className="font-medium">Toggle Columns</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuCheckboxItem
+                      checked={visibleColumns.name}
+                      onCheckedChange={() => toggleColumn('name')}
+                    >
+                      Vendor Name
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={visibleColumns.contactPerson}
+                      onCheckedChange={() => toggleColumn('contactPerson')}
+                    >
+                      Contact Person
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={visibleColumns.contactInfo}
+                      onCheckedChange={() => toggleColumn('contactInfo')}
+                    >
+                      Contact Info
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={visibleColumns.productsSupplied}
+                      onCheckedChange={() => toggleColumn('productsSupplied')}
+                    >
+                      Products Supplied
+                    </DropdownMenuCheckboxItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+          )}
         </div>
 
         <TabsContent value="list">
@@ -284,6 +319,10 @@ const Vendors: React.FC = () => {
               statusFilter={statusFilter}
               suppliers={suppliers}
               selectedVendor={selectedVendor}
+              onViewDashboard={handleViewDashboard}
+              onEditVendor={handleEditVendor}
+              onCreatePurchaseOrder={handleCreatePurchaseOrder}
+              onViewOrderHistory={handleViewOrderHistory}
             />
           ) : (
             <VendorsList 
@@ -320,8 +359,12 @@ const Vendors: React.FC = () => {
       {/* Dialogs */}
       <AddVendorDialog 
         open={addVendorDialogOpen} 
-        onOpenChange={setAddVendorDialogOpen}
+        onOpenChange={(open) => {
+          setAddVendorDialogOpen(open);
+          if (!open) setEditingVendor(null);
+        }}
         onVendorAdded={handleAddVendor}
+        editingVendor={editingVendor}
       />
       
       <AddPurchaseOrderDialog 
@@ -329,6 +372,7 @@ const Vendors: React.FC = () => {
         onOpenChange={setAddPurchaseOrderDialogOpen}
         suppliers={suppliers}
         onOrderAdded={handleAddPurchaseOrder}
+        preSelectedVendorId={selectedVendorForPO}
       />
     </div>
   );

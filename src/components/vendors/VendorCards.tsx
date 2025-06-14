@@ -18,6 +18,10 @@ interface VendorCardsProps {
   onSelectVendor?: (vendorId: string) => void;
   suppliers: Supplier[];
   selectedVendor?: string | null;
+  onViewDashboard?: (vendorId: string) => void;
+  onEditVendor?: (vendor: Supplier) => void;
+  onCreatePurchaseOrder?: (vendorId: string) => void;
+  onViewOrderHistory?: (vendorId: string) => void;
 }
 
 const VendorCards: React.FC<VendorCardsProps> = ({ 
@@ -25,7 +29,11 @@ const VendorCards: React.FC<VendorCardsProps> = ({
   statusFilter = [], 
   onSelectVendor,
   suppliers,
-  selectedVendor
+  selectedVendor,
+  onViewDashboard,
+  onEditVendor,
+  onCreatePurchaseOrder,
+  onViewOrderHistory
 }) => {
   const filteredSuppliers = suppliers.filter(supplier => {
     // Apply text search filter
@@ -45,11 +53,11 @@ const VendorCards: React.FC<VendorCardsProps> = ({
   const getStatusBadge = (status: string = 'active') => {
     switch (status) {
       case 'active':
-        return <Badge variant="success" className="flex items-center gap-1 text-xs"><Check className="h-3 w-3" />Active</Badge>;
+        return <Badge variant="default" className="flex items-center gap-1 text-xs bg-green-100 text-green-800 hover:bg-green-100"><Check className="h-3 w-3" />Active</Badge>;
       case 'inactive':
         return <Badge variant="destructive" className="flex items-center gap-1 text-xs"><AlertTriangle className="h-3 w-3" />Inactive</Badge>;
       case 'pending':
-        return <Badge variant="warning" className="flex items-center gap-1 text-xs"><Clock className="h-3 w-3" />Pending</Badge>;
+        return <Badge variant="secondary" className="flex items-center gap-1 text-xs bg-yellow-100 text-yellow-800 hover:bg-yellow-100"><Clock className="h-3 w-3" />Pending</Badge>;
       default:
         return <Badge variant="secondary" className="text-xs">{status}</Badge>;
     }
@@ -89,15 +97,44 @@ const VendorCards: React.FC<VendorCardsProps> = ({
                       <MoreVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onSelectVendor?.(supplier.id); }}>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem 
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        onViewDashboard?.(supplier.id);
+                      }}
+                    >
                       View Dashboard
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={(e) => e.stopPropagation()}>Edit</DropdownMenuItem>
-                    <DropdownMenuItem onClick={(e) => e.stopPropagation()}>Create Purchase Order</DropdownMenuItem>
-                    <DropdownMenuItem onClick={(e) => e.stopPropagation()}>View Order History</DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        onEditVendor?.(supplier);
+                      }}
+                    >
+                      Edit Vendor
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        onCreatePurchaseOrder?.(supplier.id);
+                      }}
+                    >
+                      Create Purchase Order
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        onViewOrderHistory?.(supplier.id);
+                      }}
+                    >
+                      View Order History
+                    </DropdownMenuItem>
                     {supplier.status !== 'inactive' && (
-                      <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="text-destructive">
+                      <DropdownMenuItem 
+                        onClick={(e) => e.stopPropagation()} 
+                        className="text-destructive"
+                      >
                         Deactivate Vendor
                       </DropdownMenuItem>
                     )}
