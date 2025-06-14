@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -12,10 +11,14 @@ import {
   User,
   FileText,
   Plus,
-  Minus
+  Minus,
+  MoreHorizontal
 } from 'lucide-react';
 import { InventoryItem } from '@/types';
 import AdjustStockDialog from './AdjustStockDialog';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Progress } from "@/components/ui/progress";
 
 interface InventoryItemDetailProps {
   item: InventoryItem;
@@ -63,152 +66,149 @@ const InventoryItemDetail: React.FC<InventoryItemDetailProps> = ({
   };
 
   const stockStatus = getStockStatus();
+  const stockPercentage = Math.min(((item.currentStock ?? 0) / ((item.lowStockThreshold > 0 ? item.lowStockThreshold : 1) * 2)) * 100, 100);
 
   return (
     <>
-      <div className="space-y-6">
-        {/* Item Header */}
-        <div className="flex flex-col lg:flex-row gap-6">
-          <div className="lg:w-1/3">
-            <Card>
-              <CardContent className="p-6">
-                <div className="aspect-square bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
+      <div className="space-y-6 animate-fade-in">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column: Image and primary info */}
+          <div className="lg:col-span-1">
+            <Card className="overflow-hidden shadow-lg">
+              <CardContent className="p-0">
+                <div className="aspect-square bg-gray-100 flex items-center justify-center">
                   {item.imageUrl ? (
-                     <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover rounded-lg" />
+                     <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
                   ) : (
-                    <Package className="h-16 w-16 text-gray-400" />
+                    <Package className="h-24 w-24 text-gray-300" />
                   )}
                 </div>
-                <h1 className="text-2xl font-bold mb-2">{item.name}</h1>
-                <p className="text-gray-600 mb-4">{item.description}</p>
-                <Badge variant={stockStatus.variant} className="mb-4">
-                  {stockStatus.label}
-                </Badge>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">SKU:</span>
-                    <span className="font-medium">{item.sku || 'N/A'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Category:</span>
-                    <span className="font-medium">{item.category}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Unit:</span>
-                    <span className="font-medium">{item.unit}</span>
-                  </div>
+                <div className="p-6">
+                  <h1 className="text-3xl font-bold leading-tight">{item.name}</h1>
+                  <p className="text-md text-gray-500">{item.category}</p>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          <div className="lg:w-2/3 space-y-6">
-            {/* Stock & Financial Info */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <Package className={`h-8 w-8 mx-auto mb-2 ${stockStatus.color}`} />
-                  <p className="text-2xl font-bold">{item.currentStock}</p>
-                  <p className="text-sm text-gray-600">Current Stock ({item.unit})</p>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <DollarSign className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-                  <p className="text-2xl font-bold">${item.cost}</p>
-                  <p className="text-sm text-gray-600">Cost per {item.unit}</p>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <TrendingUp className="h-8 w-8 mx-auto mb-2 text-green-600" />
-                  <p className="text-2xl font-bold">N/A</p>
-                  <p className="text-sm text-gray-600">Average Usage</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
+          {/* Right Column: Stock, Actions, and Details */}
+          <div className="lg:col-span-2 space-y-6">
+            <Card className="shadow-lg">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-lg">Stock Status</CardTitle>
+                <Badge variant={stockStatus.variant} className="capitalize">{stockStatus.label}</Badge>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <Button variant="outline" className="gap-2" onClick={() => handleAdjustStock('add')}>
-                    <Plus className="h-4 w-4" />
-                    Add Stock
-                  </Button>
-                  <Button variant="outline" className="gap-2" onClick={() => handleAdjustStock('remove')}>
-                    <Minus className="h-4 w-4" />
-                    Remove Stock
-                  </Button>
-                  <Button variant="outline" className="gap-2" disabled>
-                    <FileText className="h-4 w-4" />
-                    Create Order
-                  </Button>
-                  <Button variant="outline" className="gap-2" onClick={onEdit}>
-                    <Package className="h-4 w-4" />
-                    Edit Item
-                  </Button>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-4xl font-bold">{item.currentStock}</p>
+                  <p className="text-lg text-gray-500">{item.unit}</p>
                 </div>
+                <Progress value={stockPercentage} className="mt-4 h-2" />
+                <p className="text-xs text-gray-500 mt-2">
+                  {stockStatus.label !== 'In Stock' 
+                    ? `Threshold is ${item.lowStockThreshold} ${item.unit}.` 
+                    : `Well above threshold of ${item.lowStockThreshold} ${item.unit}.`}
+                </p>
               </CardContent>
+              <CardFooter className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => handleAdjustStock('remove')}>
+                  <Minus />
+                  Remove Stock
+                </Button>
+                <Button onClick={() => handleAdjustStock('add')}>
+                  <Plus />
+                  Add Stock
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <MoreHorizontal className="h-5 w-5" />
+                      <span className="sr-only">More actions</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={onEdit}>
+                      <Package className="mr-2 h-4 w-4" />
+                      <span>Edit Item</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem disabled>
+                      <FileText className="mr-2 h-4 w-4" />
+                      <span>Create Order</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </CardFooter>
             </Card>
 
-            {/* Supplier & Details */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Reorder Point</label>
-                    <p className="font-medium">{item.lowStockThreshold} {item.unit}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Total Value</label>
-                    <p className="font-medium">${((item.currentStock ?? 0) * (item.cost ?? 0)).toFixed(2)}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Recent Activity */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Recent Activity
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentActivity.map((activity, index) => (
-                <div key={index} className="flex items-center justify-between p-4 rounded-lg bg-gray-50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full" />
-                    <div>
-                      <p className="font-medium">{activity.action}</p>
-                      <p className="text-sm text-gray-600">{activity.date}</p>
+            <Accordion type="multiple" className="w-full rounded-lg border bg-card shadow-lg">
+              <AccordionItem value="details" className="border-b">
+                <AccordionTrigger className="px-6 py-4 text-base hover:no-underline">Item Details</AccordionTrigger>
+                <AccordionContent className="px-6 pb-6">
+                  <div className="space-y-4">
+                    <p className="text-sm text-gray-600">{item.description}</p>
+                    <Separator />
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                      <div>
+                        <p className="text-gray-500">SKU</p>
+                        <p className="font-medium">{item.sku || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Unit</p>
+                        <p className="font-medium">{item.unit}</p>
+                      </div>
+                       <div>
+                        <p className="text-gray-500">Cost per Unit</p>
+                        <p className="font-medium">${item.cost?.toFixed(2) || '0.00'}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Total Stock Value</p>
+                        <p className="font-medium">${((item.currentStock ?? 0) * (item.cost ?? 0)).toFixed(2)}</p>
+                      </div>
+                       <div>
+                        <p className="text-gray-500">Last Updated</p>
+                        <p className="font-medium">{new Date(item.updatedAt).toLocaleDateString()}</p>
+                      </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-medium">{activity.quantity}</p>
-                    <p className="text-sm text-gray-600 flex items-center gap-1">
-                      <User className="h-3 w-3" />
-                      {activity.user}
-                    </p>
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="activity" className="border-b-0">
+                <AccordionTrigger className="px-6 py-4 text-base hover:no-underline">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-5 w-5" />
+                    Recent Activity
                   </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 pb-6">
+                  <div className="space-y-3">
+                    {recentActivity.length > 0 ? (
+                      recentActivity.map((activity, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 rounded-md bg-gray-50 text-sm">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-2 h-2 rounded-full ${activity.quantity.startsWith('+') ? 'bg-green-500' : 'bg-red-500'}`} />
+                            <div>
+                              <p className="font-medium">{activity.action}</p>
+                              <p className="text-xs text-gray-500">{activity.date}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className={`font-medium ${activity.quantity.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>{activity.quantity}</p>
+                            <p className="text-xs text-gray-500 flex items-center justify-end gap-1">
+                              <User className="h-3 w-3" />
+                              {activity.user}
+                            </p>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-500 text-center py-4">No recent activity for this item.</p>
+                    )}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
+        </div>
       </div>
       <AdjustStockDialog
         isOpen={isAdjustStockOpen}
