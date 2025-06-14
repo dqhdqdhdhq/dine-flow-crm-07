@@ -46,8 +46,8 @@ const NewCustomer: React.FC = () => {
 
   function onSubmit(values: z.infer<typeof newCustomerSchema>) {
     const newCustomer: Customer = {
-      id: `customer-${uuidv4()}`,
       ...values,
+      id: `customer-${uuidv4()}`,
       visits: 0,
       lastVisit: new Date().toISOString(),
       totalSpent: 0,
