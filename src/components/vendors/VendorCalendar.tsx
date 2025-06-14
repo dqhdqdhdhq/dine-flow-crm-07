@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +6,9 @@ import { Button } from '@/components/ui/button';
 import { format, isSameDay } from 'date-fns';
 import { ChevronLeft, ChevronRight, Package, Truck, Calendar as CalendarIcon } from 'lucide-react';
 import { PurchaseOrder } from '@/types';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import VendorCalendarWeekView from './VendorCalendarWeekView';
+import VendorCalendarDayView from './VendorCalendarDayView';
 
 interface VendorCalendarProps {
   purchaseOrders?: PurchaseOrder[];
@@ -26,16 +28,6 @@ const VendorCalendar: React.FC<VendorCalendarProps> = ({ purchaseOrders = [] }) 
     });
   };
 
-  // Get all dates that have events
-  const getDatesWithEvents = () => {
-    const dates: Date[] = [];
-    purchaseOrders.forEach(order => {
-      dates.push(new Date(order.orderDate));
-      dates.push(new Date(order.expectedDeliveryDate));
-    });
-    return dates;
-  };
-
   const eventsForSelectedDate = getEventsForDate(selectedDate);
 
   const getStatusColor = (status: string) => {
@@ -50,37 +42,67 @@ const VendorCalendar: React.FC<VendorCalendarProps> = ({ purchaseOrders = [] }) 
     }
   };
 
+  const DayContentWithEvents = ({ date }: { date: Date }) => {
+    const dayEvents = getEventsForDate(date);
+    const hasOrder = dayEvents.some(order => isSameDay(new Date(order.orderDate), date));
+    const hasDelivery = dayEvents.some(order => isSameDay(new Date(order.expectedDeliveryDate), date));
+
+    return (
+        <>
+            {date.getDate()}
+            {(hasOrder || hasDelivery) && (
+                <div className="absolute bottom-1.5 flex items-center justify-center w-full">
+                    <div className="flex space-x-1">
+                        {hasOrder && <div className="h-1.5 w-1.5 rounded-full bg-blue-500" title="Order Placed" />}
+                        {hasDelivery && <div className="h-1.5 w-1.5 rounded-full bg-green-500" title="Expected Delivery" />}
+                    </div>
+                </div>
+            )}
+        </>
+    );
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CalendarIcon className="h-5 w-5" />
-              Purchase Order Calendar
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={(date) => date && setSelectedDate(date)}
-              month={currentMonth}
-              onMonthChange={setCurrentMonth}
-              modifiers={{
-                hasEvents: getDatesWithEvents(),
-              }}
-              modifiersStyles={{
-                hasEvents: {
-                  backgroundColor: 'rgb(99 102 241)',
-                  color: 'white',
-                  fontWeight: 'bold',
-                },
-              }}
-              className="rounded-md border"
-            />
-          </CardContent>
-        </Card>
+        <Tabs defaultValue="month" className="w-full">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <CalendarIcon className="h-5 w-5" />
+                  Purchase Order Calendar
+                </CardTitle>
+                <TabsList>
+                  <TabsTrigger value="month">Month</TabsTrigger>
+                  <TabsTrigger value="week">Week</TabsTrigger>
+                  <TabsTrigger value="day">Day</TabsTrigger>
+                </TabsList>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <TabsContent value="month">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => date && setSelectedDate(date)}
+                  month={currentMonth}
+                  onMonthChange={setCurrentMonth}
+                  className="rounded-md border"
+                  components={{
+                    DayContent: DayContentWithEvents
+                  }}
+                />
+              </TabsContent>
+              <TabsContent value="week">
+                <VendorCalendarWeekView />
+              </TabsContent>
+              <TabsContent value="day">
+                <VendorCalendarDayView />
+              </TabsContent>
+            </CardContent>
+          </Card>
+        </Tabs>
       </div>
 
       <div>
