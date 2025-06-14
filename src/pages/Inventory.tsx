@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Search, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -151,6 +150,7 @@ const Inventory: React.FC = () => {
         isOpen={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
         onAddItem={handleAddItem}
+        category={selectedCategory}
       />
     </div>
   );

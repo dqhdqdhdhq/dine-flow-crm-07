@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -44,12 +43,14 @@ interface AddInventoryItemDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onAddItem: (item: any) => void; // Use more specific type in real app
+  category?: string | null;
 }
 
 const AddInventoryItemDialog: React.FC<AddInventoryItemDialogProps> = ({
   isOpen,
   onOpenChange,
   onAddItem,
+  category,
 }) => {
   const form = useForm<AddItemFormValues>({
     resolver: zodResolver(formSchema),
@@ -71,18 +72,28 @@ const AddInventoryItemDialog: React.FC<AddInventoryItemDialogProps> = ({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Clean up preview URL when dialog closes
+  // Clean up preview URL and reset form when dialog opens/closes
   React.useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) {
+      form.reset({
+        name: '',
+        category: category || '',
+        unit: '',
+        currentStock: 0,
+        cost: 0,
+        lowStockThreshold: 0,
+        sku: '',
+        description: '',
+        defaultSupplierName: '',
+      });
+    } else {
       setImageFile(null);
       if (imagePreview) {
         URL.revokeObjectURL(imagePreview);
       }
       setImagePreview(null);
-      form.reset();
     }
-    // eslint-disable-next-line
-  }, [isOpen]);
+  }, [isOpen, category, form]);
 
   // Handle file input change
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -313,4 +324,3 @@ const AddInventoryItemDialog: React.FC<AddInventoryItemDialogProps> = ({
 };
 
 export default AddInventoryItemDialog;
-
