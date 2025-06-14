@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +8,12 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { MoreHorizontal, FileText, ChevronDown } from 'lucide-react';
 import { PurchaseOrder, OrderStatus } from '@/types';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const statusColors: Record<OrderStatus, "default" | "secondary" | "destructive" | "outline" | "success" | "warning"> = {
   draft: "secondary",
@@ -142,7 +147,18 @@ const OrderManagementList: React.FC<OrderManagementListProps> = ({ purchaseOrder
                 </TableCell>
                 <TableCell className="font-medium truncate" style={{maxWidth: '100px'}} title={order.id}>
                   <div className="flex items-center gap-2">
-                     {order.templateId && <FileText className="h-4 w-4 text-muted-foreground" title={`From template: ${order.templateName}`} />}
+                     {order.templateId && (
+                       <TooltipProvider>
+                         <Tooltip>
+                           <TooltipTrigger asChild>
+                             <FileText className="h-4 w-4 text-muted-foreground" />
+                           </TooltipTrigger>
+                           <TooltipContent>
+                             <p>From template: {order.templateName}</p>
+                           </TooltipContent>
+                         </Tooltip>
+                       </TooltipProvider>
+                     )}
                     <span>{order.id.substring(0, 8)}...</span>
                   </div>
                 </TableCell>
@@ -182,4 +198,3 @@ const OrderManagementList: React.FC<OrderManagementListProps> = ({ purchaseOrder
 };
 
 export default OrderManagementList;
-
