@@ -1,5 +1,4 @@
-
-import { Supplier, PurchaseOrder } from '@/types';
+import { Supplier, PurchaseOrder, OrderTemplate } from '@/types';
 
 export const mockSuppliers: Supplier[] = [
   {
@@ -254,6 +253,71 @@ export const mockPurchaseOrders: PurchaseOrder[] = [
     ],
     totalAmount: 10 * 85.0,
     notes: 'Cancelled due to pricing issue',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
+];
+
+export const mockOrderTemplates: OrderTemplate[] = [
+  {
+    id: 'template-1',
+    name: 'Weekly Veggie Stock-up',
+    supplierId: 'supplier-3',
+    supplierName: 'Local Produce',
+    items: [
+      {
+        inventoryItemId: '4',
+        name: 'Organic Tomatoes',
+        quantity: 20,
+        unit: 'kg',
+        unitPrice: 4.5,
+      },
+      {
+        inventoryItemId: 'some-item-id-1',
+        name: 'Fresh Herbs',
+        quantity: 5,
+        unit: 'bunch',
+        unitPrice: 2.0,
+      }
+    ],
+    recurrence: {
+      pattern: 'weekly',
+      dayOfWeek: 1, // Monday
+    },
+    nextGenerationDate: new Date(new Date().setDate(new Date().getDate() + (1 + 7 - new Date().getDay()) % 7)).toISOString(),
+    autoGenerate: true,
+    notes: 'Standard weekly order for vegetables.',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: 'template-2',
+    name: 'Monthly Wine Restock',
+    supplierId: 'supplier-2',
+    supplierName: 'Premium Wines',
+    items: [
+      {
+        inventoryItemId: '2',
+        name: 'Cabernet Sauvignon',
+        quantity: 24,
+        unit: 'bottle',
+        unitPrice: 35.0,
+      },
+      {
+        inventoryItemId: 'some-item-id-2',
+        name: 'Chardonnay',
+        quantity: 12,
+        unit: 'bottle',
+        unitPrice: 30.0,
+      }
+    ],
+    recurrence: {
+      pattern: 'monthly',
+      dayOfMonth: 1,
+    },
+    nextGenerationDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toISOString(),
+    autoGenerate: false,
+    notes: 'Check inventory before generating this order.',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   }

@@ -136,6 +136,34 @@ export interface PurchaseOrderItem {
   notes: string;
 }
 
+// Order Template related types
+export type RecurrencePattern = 'daily' | 'weekly' | 'monthly' | 'yearly';
+
+export interface Recurrence {
+  pattern: RecurrencePattern;
+  // For weekly, day of the week (0=Sun, 1=Mon, ...)
+  dayOfWeek?: number;
+  // For monthly, day of the month (1-31)
+  dayOfMonth?: number;
+  // For yearly, month and day
+  month?: number;
+  day?: number;
+}
+
+export interface OrderTemplate {
+  id: string;
+  name: string;
+  supplierId: string;
+  supplierName: string;
+  items: Omit<PurchaseOrderItem, 'id' | 'receivedQuantity' | 'notes'>[];
+  recurrence: Recurrence;
+  nextGenerationDate: string; // ISO string
+  autoGenerate: boolean;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Supplier {
   id: string;
   name: string;

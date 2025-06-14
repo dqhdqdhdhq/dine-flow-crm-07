@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, Store, FileText, Calendar, Filter, SlidersHorizontal, Grid, List } from 'lucide-react';
+import { Plus, Search, Store, FileText, Calendar, Filter, SlidersHorizontal, Grid, List, MoreHorizontal, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -12,6 +11,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import VendorsList from '@/components/vendors/VendorsList';
 import VendorCards from '@/components/vendors/VendorCards';
 import VendorDashboard from '@/components/vendors/VendorDashboard';
@@ -20,9 +20,204 @@ import VendorTimeline from '@/components/vendors/VendorTimeline';
 import AddVendorDialog from '@/components/vendors/AddVendorDialog';
 import AddPurchaseOrderDialog from '@/components/vendors/AddPurchaseOrderDialog';
 import { Badge } from '@/components/ui/badge';
-import { mockSuppliers, mockPurchaseOrders } from '@/data/vendorsData';
-import { Supplier, PurchaseOrder } from '@/types';
+import { mockSuppliers, mockPurchaseOrders, mockOrderTemplates } from '@/data/vendorsData';
+import { Supplier, PurchaseOrder, OrderTemplate } from '@/types';
 import { toast } from 'sonner';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm, useFieldArray } from "react-hook-form";
+import * as z from "zod";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+
+const orderTemplateFormSchema = z.object({
+  name: z.string().min(1, "Template name is required."),
+  supplierId: z.string({ required_error: "Please select a supplier" }),
+  notes: z.string().optional(),
+  items: z.array(
+    z.object({
+      name: z.string().min(1, { message: "Item name is required." }),
+      quantity: z.coerce.number().min(1, { message: "Quantity must be at least 1." }),
+      unit: z.string().min(1, { message: "Unit is required." }),
+      unitPrice: z.coerce.number().min(0.01, { message: "Unit price must be greater than 0." }),
+    })
+  ).min(1, { message: "At least one item is required." }),
+  recurrence: z.object({
+      pattern: z.enum(['daily', 'weekly', 'monthly', 'yearly']),
+      dayOfWeek: z.coerce.number().optional(),
+      dayOfMonth: z.coerce.number().optional(),
+  })
+});
+
+const AddOrderTemplateDialog: React.FC<{
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  suppliers: Supplier[];
+  onTemplateAdded: (template: OrderTemplate) => void;
+}> = ({ open, onOpenChange, suppliers, onTemplateAdded }) => {
+  const form = useForm<z.infer<typeof orderTemplateFormSchema>>({
+    resolver: zodResolver(orderTemplateFormSchema),
+    defaultValues: {
+      name: '',
+      supplierId: '',
+      notes: '',
+      items: [{ name: '', quantity: 1, unit: '', unitPrice: 0.01 }],
+      recurrence: { pattern: 'weekly', dayOfWeek: 1 }
+    },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "items",
+  });
+  
+  const recurrencePattern = form.watch('recurrence.pattern');
+
+  function onSubmit(values: z.infer<typeof orderTemplateFormSchema>) {
+    const selectedSupplier = suppliers.find(s => s.id === values.supplierId);
+    const newTemplate: OrderTemplate = {
+      id: `template-${Date.now()}`,
+      name: values.name,
+      supplierId: values.supplierId,
+      supplierName: selectedSupplier?.name || "Unknown Supplier",
+      items: values.items.map(item => ({...item, inventoryItemId: ''})), // inventoryItemId should be handled properly
+      recurrence: values.recurrence as any, // Simple cast for now
+      nextGenerationDate: new Date().toISOString(), // This should be calculated based on recurrence
+      autoGenerate: false,
+      notes: values.notes,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    onTemplateAdded(newTemplate);
+    onOpenChange(false);
+    form.reset();
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Create Order Template</DialogTitle>
+          <DialogDescription>
+            Fill out the form to create a new recurring order template.
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField control={form.control} name="name" render={({ field }) => (
+              <FormItem><FormLabel>Template Name</FormLabel><FormControl><Input placeholder="e.g. Weekly Dairy Order" {...field} /></FormControl><FormMessage /></FormItem>
+            )}/>
+            <FormField control={form.control} name="supplierId" render={({ field }) => (
+              <FormItem><FormLabel>Supplier</FormLabel><FormControl>
+                <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm" {...field}>
+                  <option value="" disabled>Select a supplier</option>
+                  {suppliers.map(s => (<option key={s.id} value={s.id}>{s.name}</option>))}
+                </select>
+              </FormControl><FormMessage /></FormItem>
+            )}/>
+             <FormField control={form.control} name="recurrence.pattern" render={({ field }) => (
+              <FormItem><FormLabel>Frequency</FormLabel><FormControl>
+                 <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm" {...field}>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="yearly">Yearly</option>
+                </select>
+              </FormControl><FormMessage /></FormItem>
+            )}/>
+            {recurrencePattern === 'weekly' && (
+              <FormField control={form.control} name="recurrence.dayOfWeek" render={({ field }) => (
+                <FormItem><FormLabel>Day of the week</FormLabel><FormControl>
+                  <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm" {...field}>
+                    {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((day, i) => <option key={i} value={i}>{day}</option>)}
+                  </select>
+                </FormControl><FormMessage /></FormItem>
+              )}/>
+            )}
+             {recurrencePattern === 'monthly' && (
+              <FormField control={form.control} name="recurrence.dayOfMonth" render={({ field }) => (
+                <FormItem><FormLabel>Day of the month</FormLabel><FormControl><Input type="number" min={1} max={31} {...field} /></FormControl><FormMessage /></FormItem>
+              )}/>
+            )}
+            <div>
+              <h4 className="text-sm font-medium mb-2">Order Items</h4>
+              {fields.map((field, index) => (
+                <div key={field.id} className="grid grid-cols-12 gap-2 mb-2 items-end">
+                  <FormField control={form.control} name={`items.${index}.name`} render={({ field }) => (<FormItem className="col-span-4"><FormLabel className={index !== 0 ? "sr-only" : undefined}>Item Name</FormLabel><FormControl><Input {...field} placeholder="Item name" /></FormControl><FormMessage /></FormItem>)}/>
+                  <FormField control={form.control} name={`items.${index}.quantity`} render={({ field }) => (<FormItem className="col-span-2"><FormLabel className={index !== 0 ? "sr-only" : undefined}>Qty</FormLabel><FormControl><Input type="number" {...field} placeholder="Qty" /></FormControl><FormMessage /></FormItem>)}/>
+                  <FormField control={form.control} name={`items.${index}.unit`} render={({ field }) => (<FormItem className="col-span-2"><FormLabel className={index !== 0 ? "sr-only" : undefined}>Unit</FormLabel><FormControl><Input {...field} placeholder="kg, box" /></FormControl><FormMessage /></FormItem>)}/>
+                  <FormField control={form.control} name={`items.${index}.unitPrice`} render={({ field }) => (<FormItem className="col-span-3"><FormLabel className={index !== 0 ? "sr-only" : undefined}>Price/Unit</FormLabel><FormControl><Input type="number" {...field} placeholder="$ per unit" step="0.01" /></FormControl><FormMessage /></FormItem>)}/>
+                  <Button type="button" variant="ghost" size="icon" className="col-span-1" onClick={() => remove(index)} disabled={fields.length <= 1}><Trash2 className="h-4 w-4" /></Button>
+                </div>
+              ))}
+              <Button type="button" variant="outline" size="sm" onClick={() => append({ name: '', quantity: 1, unit: '', unitPrice: 0.01 })} className="mt-2"><Plus className="h-4 w-4 mr-2" /> Add Item</Button>
+            </div>
+            <FormField control={form.control} name="notes" render={({ field }) => (<FormItem><FormLabel>Notes</FormLabel><FormControl><Textarea placeholder="Notes for this template" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+              <Button type="submit">Create Template</Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const OrderTemplatesList: React.FC<{
+  templates: OrderTemplate[];
+  onGenerateOrder: (template: OrderTemplate) => void;
+}> = ({ templates, onGenerateOrder }) => {
+  if (templates.length === 0) {
+    return <div className="text-center text-muted-foreground py-12">No templates created yet. Get started by creating one.</div>
+  }
+
+  const formatRecurrence = (template: OrderTemplate) => {
+    const { pattern, dayOfMonth, dayOfWeek } = template.recurrence;
+    switch(pattern) {
+      case 'daily': return 'Daily';
+      case 'weekly': return `Weekly on ${['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Saturdays'][dayOfWeek || 0]}`;
+      case 'monthly': return `Monthly on day ${dayOfMonth}`;
+      case 'yearly': return 'Yearly';
+      default: return 'Custom';
+    }
+  }
+
+  return (
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      {templates.map(template => (
+        <Card key={template.id}>
+          <CardHeader>
+            <CardTitle className="flex justify-between items-start">
+              {template.name}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem>Edit</DropdownMenuItem>
+                  <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </CardTitle>
+            <CardDescription>{template.supplierName}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            <p className="font-medium">{formatRecurrence(template)}</p>
+            <p className="text-muted-foreground">Next: {format(new Date(template.nextGenerationDate), "MMM d, yyyy")}</p>
+            <p className="text-muted-foreground">{template.items.length} items</p>
+          </CardContent>
+          <CardFooter>
+            <Button className="w-full" onClick={() => onGenerateOrder(template)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Generate Order
+            </Button>
+          </CardFooter>
+        </Card>
+      ))}
+    </div>
+  )
+};
 
 const Vendors: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -42,10 +237,12 @@ const Vendors: React.FC = () => {
   // State for sample data
   const [suppliers, setSuppliers] = useState<Supplier[]>(mockSuppliers);
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(mockPurchaseOrders);
+  const [orderTemplates, setOrderTemplates] = useState<OrderTemplate[]>(mockOrderTemplates);
   
   // Dialog states
   const [addVendorDialogOpen, setAddVendorDialogOpen] = useState(false);
   const [addPurchaseOrderDialogOpen, setAddPurchaseOrderDialogOpen] = useState(false);
+  const [addTemplateDialogOpen, setAddTemplateDialogOpen] = useState(false);
   const [selectedVendorForPO, setSelectedVendorForPO] = useState<string | null>(null);
 
   // Status filter options for vendors
@@ -84,6 +281,38 @@ const Vendors: React.FC = () => {
     setSelectedVendorForPO(null);
   };
 
+  const handleAddOrderTemplate = (newTemplate: OrderTemplate) => {
+    setOrderTemplates(prev => [newTemplate, ...prev]);
+    toast.success(`Template "${newTemplate.name}" created successfully.`);
+  };
+
+  const handleGenerateOrderFromTemplate = (template: OrderTemplate) => {
+    const totalAmount = template.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+    
+    const newOrder: PurchaseOrder = {
+      id: `${Date.now()}`,
+      supplierId: template.supplierId,
+      supplierName: template.supplierName,
+      status: 'draft',
+      orderDate: new Date().toISOString(),
+      expectedDeliveryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days from now, can be improved
+      items: template.items.map((item, index) => ({
+        ...item,
+        id: `item-${Date.now()}-${index}`,
+        inventoryItemId: item.inventoryItemId || `generic-${index}`,
+        receivedQuantity: 0,
+        notes: '',
+      })),
+      totalAmount,
+      notes: `Generated from template: ${template.name}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    
+    handleAddPurchaseOrder(newOrder);
+    toast.info(`New draft PO created from template "${template.name}".`);
+  };
+
   // Handle vendor card actions
   const handleViewDashboard = (vendorId: string) => {
     setSelectedVendor(vendorId);
@@ -116,6 +345,14 @@ const Vendors: React.FC = () => {
           Create Purchase Order
         </Button>
       );
+    }
+    if (activeTab === 'templates') {
+      return (
+        <Button className="gap-2" onClick={() => setAddTemplateDialogOpen(true)}>
+          <Plus className="h-4 w-4" />
+          Add Template
+        </Button>
+      )
     }
     return (
       <Button className="gap-2" onClick={() => setAddVendorDialogOpen(true)}>
@@ -232,7 +469,7 @@ const Vendors: React.FC = () => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <TabsList className="grid grid-cols-4">
+          <TabsList className="grid w-full sm:w-auto sm:grid-cols-5">
             <TabsTrigger value="list">
               <Store className="mr-2 h-4 w-4" />
               Vendors
@@ -248,6 +485,10 @@ const Vendors: React.FC = () => {
             <TabsTrigger value="timeline">
               <FileText className="mr-2 h-4 w-4" />
               Timeline
+            </TabsTrigger>
+            <TabsTrigger value="templates">
+              <FileText className="mr-2 h-4 w-4" />
+              Templates
             </TabsTrigger>
           </TabsList>
 
@@ -354,6 +595,10 @@ const Vendors: React.FC = () => {
             suppliers={suppliers}
           />
         </TabsContent>
+
+        <TabsContent value="templates">
+          <OrderTemplatesList templates={orderTemplates} onGenerateOrder={handleGenerateOrderFromTemplate} />
+        </TabsContent>
       </Tabs>
       
       {/* Dialogs */}
@@ -373,6 +618,13 @@ const Vendors: React.FC = () => {
         suppliers={suppliers}
         onOrderAdded={handleAddPurchaseOrder}
         preSelectedVendorId={selectedVendorForPO}
+      />
+      
+      <AddOrderTemplateDialog
+        open={addTemplateDialogOpen}
+        onOpenChange={setAddTemplateDialogOpen}
+        suppliers={suppliers}
+        onTemplateAdded={handleAddOrderTemplate}
       />
     </div>
   );
