@@ -28,7 +28,7 @@ const InventoryItemsList: React.FC<InventoryItemsListProps> = ({ items, searchQu
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {filteredItems.map(item => (
         <Card 
           key={item.id} 
@@ -36,7 +36,7 @@ const InventoryItemsList: React.FC<InventoryItemsListProps> = ({ items, searchQu
           onClick={() => onItemSelect(item.id)}
         >
           <CardHeader className="p-0 relative">
-            <div className="aspect-square w-full">
+            <div className="aspect-[4/3] w-full">
               {item.imageUrl ? (
                 <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover rounded-t-lg" />
               ) : (
@@ -47,7 +47,7 @@ const InventoryItemsList: React.FC<InventoryItemsListProps> = ({ items, searchQu
             </div>
           </CardHeader>
           <CardContent className="p-4 flex-grow">
-            <CardTitle className="text-base font-semibold truncate" title={item.name}>{item.name}</CardTitle>
+            <CardTitle className="text-lg font-semibold truncate" title={item.name}>{item.name}</CardTitle>
             <p className="text-sm text-gray-500">{item.category}</p>
           </CardContent>
           <CardFooter className="p-4 pt-0 flex justify-between items-center">

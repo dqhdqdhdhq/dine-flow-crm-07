@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Search, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -39,7 +40,49 @@ const initialInventory: InventoryItem[] = [
     updatedAt: new Date().toISOString(),
     description: "Aged 24 months, imported from Italy.",
     sku: "PAN-CHE-001"
-  }
+  },
+  {
+    id: 'item-3',
+    name: 'Truffle Oil',
+    category: 'Pantry',
+    currentStock: 3, // Low stock
+    unit: 'bottle',
+    cost: 18.75,
+    lowStockThreshold: 5,
+    imageUrl: 'https://images.unsplash.com/photo-1541533848939-f8fa25c9405a?q=80&w=300&auto=format&fit=crop',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    description: "White truffle infused olive oil.",
+    sku: "PAN-OIL-002"
+  },
+  {
+    id: 'item-4',
+    name: 'Cabernet Sauvignon',
+    category: 'Beverages',
+    currentStock: 24,
+    unit: 'bottle',
+    cost: 35.0,
+    lowStockThreshold: 10,
+    imageUrl: 'https://images.unsplash.com/photo-1584916201218-6e3407871b77?q=80&w=300&auto=format&fit=crop',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    description: "Vintage 2018, Napa Valley.",
+    sku: "BEV-WIN-001"
+  },
+  {
+      id: 'item-5',
+      name: 'Organic Avocados',
+      category: 'Fresh Produce',
+      currentStock: 4, // Low Stock
+      unit: 'piece',
+      cost: 1.5,
+      lowStockThreshold: 5,
+      imageUrl: 'https://images.unsplash.com/photo-1587915598503-a4474c1dfa0d?q=80&w=300&auto=format&fit=crop',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      description: 'Creamy and delicious organic avocados.',
+      sku: 'FP-AVO-002',
+  },
 ];
 
 const Inventory: React.FC = () => {
