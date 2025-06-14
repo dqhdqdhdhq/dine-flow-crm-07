@@ -26,7 +26,6 @@ import { Image as ImageIcon, X } from 'lucide-react';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
-  // Remove imageUrl from form schema, we'll handle file separately
   category: z.string().min(2, { message: "Category is required." }),
   unit: z.string().min(1, { message: "Unit is required (e.g., kg, bottle, item)." }),
   currentStock: z.coerce.number().min(0, { message: "Stock cannot be negative." }).default(0),
@@ -88,9 +87,7 @@ const AddInventoryItemDialog: React.FC<AddInventoryItemDialogProps> = ({
       });
     } else {
       setImageFile(null);
-      if (imagePreview) {
-        URL.revokeObjectURL(imagePreview);
-      }
+      // We don't revoke the object URL here, so it can be displayed in the list.
       setImagePreview(null);
     }
   }, [isOpen, category, form]);
@@ -130,7 +127,7 @@ const AddInventoryItemDialog: React.FC<AddInventoryItemDialogProps> = ({
     onAddItem(newItem);
     form.reset();
     setImageFile(null);
-    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    // We don't revoke the object URL here, so it can be displayed in the list.
     setImagePreview(null);
     onOpenChange(false);
   };

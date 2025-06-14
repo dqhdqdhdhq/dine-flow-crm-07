@@ -10,28 +10,34 @@ import {
   Wine,
   Apple,
   Utensils,
-  ShoppingCart
 } from 'lucide-react';
+import { InventoryItem } from '@/types';
 
 interface InventoryOverviewProps {
+  inventoryItems: InventoryItem[];
   searchQuery: string;
   onCategorySelect: (category: string) => void;
   onItemSelect: (itemId: string) => void;
 }
 
 const InventoryOverview: React.FC<InventoryOverviewProps> = ({
+  inventoryItems,
   searchQuery,
   onCategorySelect,
   onItemSelect
 }) => {
+  const lowStockItems = inventoryItems.filter(item => 
+    (item.currentStock ?? item.quantityOnHand ?? 0) < (item.lowStockThreshold ?? item.reorderPoint ?? 0)
+  );
+
   const stats = [
     {
       title: 'Low Stock Alerts',
-      value: '3',
+      value: lowStockItems.length.toString(),
       icon: AlertTriangle,
       color: 'text-red-500',
       bgColor: 'bg-red-50',
-      action: () => onCategorySelect('Low Stock')
+      action: lowStockItems.length > 0 ? () => onCategorySelect('Low Stock') : undefined
     },
     {
       title: 'Pending Orders',
@@ -43,7 +49,7 @@ const InventoryOverview: React.FC<InventoryOverviewProps> = ({
     },
     {
       title: 'Total Items',
-      value: '247',
+      value: inventoryItems.length.toString(),
       icon: Package,
       color: 'text-blue-500',
       bgColor: 'bg-blue-50'
@@ -57,60 +63,48 @@ const InventoryOverview: React.FC<InventoryOverviewProps> = ({
     }
   ];
 
-  const categories = [
-    {
-      name: 'Beverages',
-      icon: Wine,
-      count: 45,
-      color: 'bg-purple-100 text-purple-700',
-      lowStock: 2
-    },
-    {
-      name: 'Fresh Produce',
-      icon: Apple,
-      count: 78,
-      color: 'bg-green-100 text-green-700',
-      lowStock: 1
-    },
-    {
-      name: 'Pantry',
-      icon: Package,
-      count: 89,
-      color: 'bg-orange-100 text-orange-700',
-      lowStock: 0
-    },
-    {
-      name: 'Kitchen Supplies',
-      icon: Utensils,
-      count: 35,
-      color: 'bg-gray-100 text-gray-700',
-      lowStock: 0
+  const categoryData = inventoryItems.reduce((acc, item) => {
+    const categoryName = item.category || 'Uncategorized';
+    if (!acc[categoryName]) {
+      acc[categoryName] = {
+        name: categoryName,
+        count: 0,
+        lowStock: 0,
+        icon: (() => {
+          const lowerCaseCategory = categoryName.toLowerCase();
+          if (lowerCaseCategory.includes('produce')) return Apple;
+          if (lowerCaseCategory.includes('pantry')) return Package;
+          if (lowerCaseCategory.includes('beverage')) return Wine;
+          return Utensils;
+        })(),
+        color: (() => {
+          const lowerCaseCategory = categoryName.toLowerCase();
+          if (lowerCaseCategory.includes('produce')) return 'bg-green-100 text-green-700';
+          if (lowerCaseCategory.includes('pantry')) return 'bg-orange-100 text-orange-700';
+          if (lowerCaseCategory.includes('beverage')) return 'bg-purple-100 text-purple-700';
+          return 'bg-gray-100 text-gray-700';
+        })(),
+      };
     }
-  ];
+    acc[categoryName].count++;
+    if ((item.currentStock ?? item.quantityOnHand ?? 0) < (item.lowStockThreshold ?? item.reorderPoint ?? 0)) {
+      acc[categoryName].lowStock++;
+    }
+    return acc;
+  }, {} as Record<string, { name: string; count: number; lowStock: number; icon: React.ElementType; color: string; }>);
+  
+  const categories = Object.values(categoryData);
 
-  const recentActivity = [
-    {
-      id: '1',
-      action: 'Low Stock Alert',
-      item: 'Truffle Oil',
-      time: '2 hours ago',
-      type: 'alert'
-    },
-    {
-      id: '2',
-      action: 'Order Received',
-      item: 'Cabernet Sauvignon (8/12 bottles)',
-      time: '4 hours ago',
-      type: 'success'
-    },
-    {
-      id: '3',
-      action: 'New Order Placed',
-      item: 'Parmigiano Reggiano',
-      time: '1 day ago',
-      type: 'info'
-    }
-  ];
+  const recentActivity = inventoryItems
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    .slice(0, 3)
+    .map(item => ({
+      id: item.id,
+      action: 'Item Updated',
+      item: item.name,
+      time: 'Recently',
+      type: lowStockItems.some(lowItem => lowItem.id === item.id) ? 'alert' : 'info'
+    }));
 
   return (
     <div className="space-y-8">

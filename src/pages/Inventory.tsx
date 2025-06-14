@@ -125,6 +125,7 @@ const Inventory: React.FC = () => {
       {/* Dynamic Content based on view mode */}
       {viewMode === 'dashboard' && (
         <InventoryOverview 
+          inventoryItems={inventoryItems}
           searchQuery={searchQuery}
           onCategorySelect={handleCategorySelect}
           onItemSelect={handleItemSelect}
@@ -133,7 +134,15 @@ const Inventory: React.FC = () => {
 
       {viewMode === 'category' && selectedCategory && (
         <InventoryItemsList
-          items={inventoryItems.filter(item => item.category === selectedCategory)}
+          items={
+            selectedCategory === 'Low Stock'
+              ? inventoryItems.filter(item => 
+                  (item.currentStock ?? 0) < (item.lowStockThreshold ?? 0)
+                )
+              : selectedCategory === 'Pending Orders'
+              ? [] // No data model for this yet
+              : inventoryItems.filter(item => item.category === selectedCategory)
+          }
           searchQuery={searchQuery}
           onItemSelect={handleItemSelect}
         />
