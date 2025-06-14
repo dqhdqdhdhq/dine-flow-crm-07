@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Search, Store, FileText, Calendar, Filter, SlidersHorizontal, Grid, List, MoreHorizontal, ClipboardList } from 'lucide-react';
@@ -27,6 +26,7 @@ import { v4 as uuidv4 } from "uuid";
 import OrderManagementList from '@/components/vendors/OrderManagementList';
 import OrderTemplatesList from '@/components/vendors/OrderTemplatesList';
 import AddOrderTemplateDialog from '@/components/vendors/AddOrderTemplateDialog';
+import EditOrderTemplateDialog from '@/components/vendors/EditOrderTemplateDialog';
 
 const Vendors: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -52,6 +52,8 @@ const Vendors: React.FC = () => {
   const [addVendorDialogOpen, setAddVendorDialogOpen] = useState(false);
   const [addPurchaseOrderDialogOpen, setAddPurchaseOrderDialogOpen] = useState(false);
   const [addTemplateDialogOpen, setAddTemplateDialogOpen] = useState(false);
+  const [editTemplateDialogOpen, setEditTemplateDialogOpen] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<OrderTemplate | null>(null);
   const [selectedVendorForPO, setSelectedVendorForPO] = useState<string | null>(null);
 
   // Status filter options for vendors
@@ -99,9 +101,35 @@ const Vendors: React.FC = () => {
     toast.success(`Order status updated to ${status}.`);
   };
 
+  const handleBulkUpdateOrderStatus = (orderIds: string[], status: OrderStatus) => {
+    setPurchaseOrders(prevOrders =>
+      prevOrders.map(order =>
+        orderIds.includes(order.id) ? { ...order, status, updatedAt: new Date().toISOString() } : order
+      )
+    );
+    toast.success(`${orderIds.length} orders updated to ${status}.`);
+  };
+
   const handleAddOrderTemplate = (newTemplate: OrderTemplate) => {
     setOrderTemplates(prev => [newTemplate, ...prev]);
     toast.success(`Template "${newTemplate.name}" created successfully.`);
+  };
+
+  const handleUpdateTemplate = (updatedTemplate: OrderTemplate) => {
+    setOrderTemplates(prev => prev.map(t => t.id === updatedTemplate.id ? updatedTemplate : t));
+    toast.success(`Template "${updatedTemplate.name}" updated successfully.`);
+    setEditingTemplate(null);
+    setEditTemplateDialogOpen(false);
+  };
+
+  const handleDeleteTemplate = (templateId: string) => {
+    setOrderTemplates(prev => prev.filter(t => t.id !== templateId));
+    toast.success(`Template deleted successfully.`);
+  };
+
+  const handleEditTemplate = (template: OrderTemplate) => {
+    setEditingTemplate(template);
+    setEditTemplateDialogOpen(true);
   };
 
   const handleGenerateOrderFromTemplate = (template: OrderTemplate) => {
@@ -125,6 +153,8 @@ const Vendors: React.FC = () => {
       notes: `Generated from template: ${template.name}`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      templateId: template.id,
+      templateName: template.name,
     };
     
     handleAddPurchaseOrder(newOrder);
@@ -421,11 +451,20 @@ const Vendors: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="templates">
-          <OrderTemplatesList templates={orderTemplates} onGenerateOrder={handleGenerateOrderFromTemplate} />
+          <OrderTemplatesList
+            templates={orderTemplates}
+            onGenerateOrder={handleGenerateOrderFromTemplate}
+            onEdit={handleEditTemplate}
+            onDelete={handleDeleteTemplate}
+          />
         </TabsContent>
 
         <TabsContent value="manage-orders">
-          <OrderManagementList purchaseOrders={purchaseOrders} onUpdateStatus={handleUpdateOrderStatus} />
+          <OrderManagementList 
+            purchaseOrders={purchaseOrders} 
+            onUpdateStatus={handleUpdateOrderStatus}
+            onBulkUpdateStatus={handleBulkUpdateOrderStatus}
+          />
         </TabsContent>
       </Tabs>
       
@@ -453,6 +492,17 @@ const Vendors: React.FC = () => {
         onOpenChange={setAddTemplateDialogOpen}
         suppliers={suppliers}
         onTemplateAdded={handleAddOrderTemplate}
+      />
+
+      <EditOrderTemplateDialog
+        open={editTemplateDialogOpen}
+        onOpenChange={(open) => {
+          setEditTemplateDialogOpen(open);
+          if (!open) setEditingTemplate(null);
+        }}
+        suppliers={suppliers}
+        onTemplateUpdated={handleUpdateTemplate}
+        editingTemplate={editingTemplate}
       />
     </div>
   );

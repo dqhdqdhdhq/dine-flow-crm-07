@@ -123,6 +123,8 @@ export interface PurchaseOrder {
   receivedAt?: string;
   createdAt: string;
   updatedAt: string;
+  templateId?: string;
+  templateName?: string;
 }
 
 export interface PurchaseOrderItem {
