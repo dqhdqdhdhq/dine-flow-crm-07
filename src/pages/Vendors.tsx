@@ -82,7 +82,13 @@ const AddOrderTemplateDialog: React.FC<{
       name: values.name,
       supplierId: values.supplierId,
       supplierName: selectedSupplier?.name || "Unknown Supplier",
-      items: values.items.map(item => ({...item, inventoryItemId: ''})), // inventoryItemId should be handled properly
+      items: values.items.map(item => ({
+        name: item.name,
+        quantity: item.quantity,
+        unit: item.unit,
+        unitPrice: item.unitPrice,
+        inventoryItemId: '', // This is a placeholder
+      })),
       recurrence: values.recurrence as any, // Simple cast for now
       nextGenerationDate: new Date().toISOString(), // This should be calculated based on recurrence
       autoGenerate: false,
