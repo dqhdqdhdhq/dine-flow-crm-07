@@ -31,6 +31,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { v4 as uuidv4 } from "uuid";
 
 const orderTemplateFormSchema = z.object({
   name: z.string().min(1, "Template name is required."),
@@ -78,7 +79,7 @@ const AddOrderTemplateDialog: React.FC<{
   function onSubmit(values: z.infer<typeof orderTemplateFormSchema>) {
     const selectedSupplier = suppliers.find(s => s.id === values.supplierId);
     const newTemplate: OrderTemplate = {
-      id: `template-${Date.now()}`,
+      id: uuidv4(),
       name: values.name,
       supplierId: values.supplierId,
       supplierName: selectedSupplier?.name || "Unknown Supplier",
@@ -296,16 +297,16 @@ const Vendors: React.FC = () => {
     const totalAmount = template.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
     
     const newOrder: PurchaseOrder = {
-      id: `${Date.now()}`,
+      id: uuidv4(),
       supplierId: template.supplierId,
       supplierName: template.supplierName,
       status: 'draft',
       orderDate: new Date().toISOString(),
       expectedDeliveryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days from now, can be improved
-      items: template.items.map((item, index) => ({
+      items: template.items.map((item) => ({
         ...item,
-        id: `item-${Date.now()}-${index}`,
-        inventoryItemId: item.inventoryItemId || `generic-${index}`,
+        id: uuidv4(),
+        inventoryItemId: item.inventoryItemId || `generic-${uuidv4()}`,
         receivedQuantity: 0,
         notes: '',
       })),
