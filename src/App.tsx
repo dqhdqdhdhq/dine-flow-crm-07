@@ -9,6 +9,7 @@ import MainLayout from "./components/layout/MainLayout";
 import Dashboard from "./pages/Dashboard";
 import Customers from "./pages/Customers";
 import CustomerProfile from "./pages/CustomerProfile";
+import NewCustomer from "./pages/NewCustomer";
 import Reservations from "./pages/Reservations";
 import NewReservation from "./pages/NewReservation";
 import Notes from "./pages/Notes";
@@ -32,6 +33,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<MainLayout><Dashboard /></MainLayout>} />
             <Route path="/customers" element={<MainLayout><Customers /></MainLayout>} />
+            <Route path="/customers/new" element={<MainLayout><NewCustomer /></MainLayout>} />
             <Route path="/customers/:id" element={<MainLayout><CustomerProfile /></MainLayout>} />
             <Route path="/reservations" element={<MainLayout><Reservations /></MainLayout>} />
             <Route path="/reservations/new" element={<MainLayout><NewReservation /></MainLayout>} />
