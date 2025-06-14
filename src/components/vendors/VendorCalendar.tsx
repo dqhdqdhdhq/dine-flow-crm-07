@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { format, isSameDay } from 'date-fns';
-import { ChevronLeft, ChevronRight, Package, Truck, Calendar as CalendarIcon } from 'lucide-react';
+import { Package, Truck, Calendar as CalendarIcon, Plus, Edit } from 'lucide-react';
 import { PurchaseOrder } from '@/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
@@ -14,9 +13,11 @@ import VendorCalendarDayView from './VendorCalendarDayView';
 
 interface VendorCalendarProps {
   purchaseOrders?: PurchaseOrder[];
+  onCreateOrderForDate: (date: Date) => void;
+  onEditOrder: (order: PurchaseOrder) => void;
 }
 
-const VendorCalendar: React.FC<VendorCalendarProps> = ({ purchaseOrders = [] }) => {
+const VendorCalendar: React.FC<VendorCalendarProps> = ({ purchaseOrders = [], onCreateOrderForDate, onEditOrder }) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
 
@@ -149,9 +150,15 @@ const VendorCalendar: React.FC<VendorCalendarProps> = ({ purchaseOrders = [] }) 
       <div>
         <Card>
           <CardHeader>
-            <CardTitle>
-              Events for {format(selectedDate, 'MMM dd, yyyy')}
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>
+                Events for {format(selectedDate, 'MMM dd, yyyy')}
+              </CardTitle>
+              <Button variant="outline" size="sm" onClick={() => onCreateOrderForDate(selectedDate)}>
+                <Plus className="h-4 w-4 mr-2" />
+                New Order
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {eventsForSelectedDate.length === 0 ? (
@@ -168,9 +175,15 @@ const VendorCalendar: React.FC<VendorCalendarProps> = ({ purchaseOrders = [] }) 
                     <div key={order.id} className="border rounded-lg p-3 space-y-2">
                       <div className="flex items-center justify-between">
                         <h4 className="font-medium">{order.supplierName}</h4>
-                        <Badge className={getStatusColor(order.status)}>
-                          {order.status}
-                        </Badge>
+                        <div className="flex items-center gap-1">
+                          <Badge className={getStatusColor(order.status)}>
+                            {order.status}
+                          </Badge>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEditOrder(order)}>
+                            <Edit className="h-4 w-4" />
+                            <span className="sr-only">Edit Order</span>
+                          </Button>
+                        </div>
                       </div>
                       
                       <div className="space-y-1">

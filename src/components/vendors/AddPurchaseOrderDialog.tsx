@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { useForm, useFieldArray } from "react-hook-form"
 import * as z from "zod"
 import { 
   Dialog,
@@ -25,7 +25,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarIcon, Plus, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { Supplier, PurchaseOrder, OrderStatus } from '@/types';
+import { Supplier, PurchaseOrder } from '@/types';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -52,21 +52,21 @@ interface AddPurchaseOrderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   suppliers: Supplier[];
-  onOrderAdded?: (order: PurchaseOrder) => void;
+  onOrderSubmit?: (order: PurchaseOrder) => void;
   preSelectedVendorId?: string | null;
+  editingPurchaseOrder?: PurchaseOrder | null;
+  preSelectedDate?: Date | null;
 }
 
 const AddPurchaseOrderDialog: React.FC<AddPurchaseOrderDialogProps> = ({ 
   open, 
   onOpenChange,
   suppliers,
-  onOrderAdded,
-  preSelectedVendorId
+  onOrderSubmit,
+  preSelectedVendorId,
+  editingPurchaseOrder,
+  preSelectedDate
 }) => {
-  const [items, setItems] = useState<{ name: string; quantity: number; unit: string; unitPrice: number }[]>([
-    { name: '', quantity: 1, unit: '', unitPrice: 0 }
-  ]);
-
   const form = useForm<z.infer<typeof purchaseOrderFormSchema>>({
     resolver: zodResolver(purchaseOrderFormSchema),
     defaultValues: {
@@ -79,29 +79,55 @@ const AddPurchaseOrderDialog: React.FC<AddPurchaseOrderDialogProps> = ({
     },
   });
 
-  // Set pre-selected vendor when dialog opens
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "items"
+  });
+
   useEffect(() => {
-    if (preSelectedVendorId && open) {
-      form.setValue('supplierId', preSelectedVendorId);
+    if (open) {
+      if (editingPurchaseOrder) {
+        form.reset({
+          supplierId: editingPurchaseOrder.supplierId,
+          orderDate: new Date(editingPurchaseOrder.orderDate),
+          expectedDeliveryDate: new Date(editingPurchaseOrder.expectedDeliveryDate),
+          status: editingPurchaseOrder.status,
+          notes: editingPurchaseOrder.notes,
+          items: editingPurchaseOrder.items.map(item => ({
+            name: item.name,
+            quantity: item.quantity,
+            unit: item.unit,
+            unitPrice: item.unitPrice,
+          })),
+        });
+      } else {
+        const defaultDeliveryDate = new Date();
+        if (preSelectedDate) {
+          defaultDeliveryDate.setDate(preSelectedDate.getDate() + 3);
+        }
+        form.reset({
+          supplierId: preSelectedVendorId || '',
+          orderDate: preSelectedDate || new Date(),
+          expectedDeliveryDate: defaultDeliveryDate,
+          status: 'draft',
+          notes: '',
+          items: [{ name: '', quantity: 1, unit: '', unitPrice: 0 }],
+        });
+      }
     }
-  }, [preSelectedVendorId, open, form]);
+  }, [editingPurchaseOrder, preSelectedVendorId, preSelectedDate, open, form]);
 
   // Watch for supplier selection changes
   const selectedSupplierId = form.watch('supplierId');
   const selectedSupplier = suppliers.find(s => s.id === selectedSupplierId);
 
   const addItem = () => {
-    const currentItems = form.getValues('items') || [];
-    form.setValue('items', [...currentItems, { name: '', quantity: 1, unit: '', unitPrice: 0 }]);
-    setItems([...items, { name: '', quantity: 1, unit: '', unitPrice: 0 }]);
+    append({ name: '', quantity: 1, unit: '', unitPrice: 0 });
   };
 
   const removeItem = (index: number) => {
-    const currentItems = form.getValues('items') || [];
-    if (currentItems.length > 1) {
-      const newItems = currentItems.filter((_, i) => i !== index);
-      form.setValue('items', newItems);
-      setItems(items.filter((_, i) => i !== index));
+    if (fields.length > 1) {
+      remove(index);
     }
   };
 
@@ -114,51 +140,47 @@ const AddPurchaseOrderDialog: React.FC<AddPurchaseOrderDialogProps> = ({
     
     // Create a new purchase order
     const newOrder: PurchaseOrder = {
-      id: `${Date.now()}`,
+      id: editingPurchaseOrder?.id || `${Date.now()}`,
       supplierId: values.supplierId,
       supplierName: selectedSupplier?.name || "Unknown Supplier",
       status: values.status,
       orderDate: values.orderDate.toISOString(),
       expectedDeliveryDate: values.expectedDeliveryDate.toISOString(),
       items: values.items.map((item, index) => ({
-        id: `item-${Date.now()}-${index}`,
-        inventoryItemId: `${Date.now()}-${index}`, // This would typically come from inventory selection
+        id: editingPurchaseOrder?.items[index]?.id || `item-${Date.now()}-${index}`,
+        inventoryItemId: editingPurchaseOrder?.items[index]?.inventoryItemId || `${Date.now()}-${index}`,
         name: item.name,
         quantity: item.quantity,
         unit: item.unit,
         unitPrice: item.unitPrice,
-        receivedQuantity: 0,
-        notes: ''
+        receivedQuantity: editingPurchaseOrder?.items[index]?.receivedQuantity || 0,
+        notes: editingPurchaseOrder?.items[index]?.notes || ''
       })),
       totalAmount,
       notes: values.notes || '',
-      createdAt: new Date().toISOString(),
+      createdAt: editingPurchaseOrder?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
     
     // Call the callback to add the order
-    if (onOrderAdded) {
-      onOrderAdded(newOrder);
+    if (onOrderSubmit) {
+      onOrderSubmit(newOrder);
     }
     
     // Show success notification
-    toast.success("Purchase order created successfully");
+    toast.success(editingPurchaseOrder ? "Purchase order updated" : "Purchase order created");
     
     // Close the dialog
     onOpenChange(false);
-    
-    // Reset form
-    form.reset();
-    setItems([{ name: '', quantity: 1, unit: '', unitPrice: 0 }]);
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create Purchase Order</DialogTitle>
+          <DialogTitle>{editingPurchaseOrder ? 'Edit Purchase Order' : 'Create Purchase Order'}</DialogTitle>
           <DialogDescription>
-            Fill out the form to create a new purchase order.
+            {editingPurchaseOrder ? 'Update the details of this purchase order.' : 'Fill out the form to create a new purchase order.'}
           </DialogDescription>
         </DialogHeader>
         
@@ -294,8 +316,8 @@ const AddPurchaseOrderDialog: React.FC<AddPurchaseOrderDialogProps> = ({
             
             <div>
               <h4 className="text-sm font-medium mb-2">Order Items</h4>
-              {items.map((_, index) => (
-                <div key={index} className="grid grid-cols-12 gap-2 mb-2 items-end">
+              {fields.map((field, index) => (
+                <div key={field.id} className="grid grid-cols-12 gap-2 mb-2 items-end">
                   <FormField
                     control={form.control}
                     name={`items.${index}.name`}
@@ -371,7 +393,7 @@ const AddPurchaseOrderDialog: React.FC<AddPurchaseOrderDialogProps> = ({
                     size="icon" 
                     className="col-span-1"
                     onClick={() => removeItem(index)}
-                    disabled={items.length <= 1}
+                    disabled={fields.length <= 1}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -410,7 +432,7 @@ const AddPurchaseOrderDialog: React.FC<AddPurchaseOrderDialogProps> = ({
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit">Create Purchase Order</Button>
+              <Button type="submit">{editingPurchaseOrder ? 'Update Order' : 'Create Purchase Order'}</Button>
             </DialogFooter>
           </form>
         </Form>

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Search, Store, FileText, Calendar, Filter, SlidersHorizontal, Grid, List } from 'lucide-react';
@@ -32,6 +31,7 @@ const Vendors: React.FC = () => {
   const [showSearch, setShowSearch] = useState(false);
   const [activeTab, setActiveTab] = useState('list');
   const [editingVendor, setEditingVendor] = useState<Supplier | null>(null);
+  const [editingPurchaseOrder, setEditingPurchaseOrder] = useState<PurchaseOrder | null>(null);
   const [visibleColumns, setVisibleColumns] = useState({
     name: true,
     contactPerson: true,
@@ -47,6 +47,7 @@ const Vendors: React.FC = () => {
   const [addVendorDialogOpen, setAddVendorDialogOpen] = useState(false);
   const [addPurchaseOrderDialogOpen, setAddPurchaseOrderDialogOpen] = useState(false);
   const [selectedVendorForPO, setSelectedVendorForPO] = useState<string | null>(null);
+  const [preSelectedDateForPO, setPreSelectedDateForPO] = useState<Date | null>(null);
 
   // Status filter options for vendors
   const handleStatusFilterChange = (status: string) => {
@@ -78,9 +79,14 @@ const Vendors: React.FC = () => {
   };
   
   // Handle adding a new purchase order
-  const handleAddPurchaseOrder = (newOrder: PurchaseOrder) => {
-    setPurchaseOrders(prev => [newOrder, ...prev]);
-    toast.success(`Purchase order for ${newOrder.supplierName} created successfully`);
+  const handlePurchaseOrderSubmit = (order: PurchaseOrder) => {
+    if (editingPurchaseOrder) {
+      setPurchaseOrders(prev => prev.map(o => o.id === editingPurchaseOrder.id ? order : o));
+      toast.success(`Purchase order for ${order.supplierName} updated successfully`);
+    } else {
+      setPurchaseOrders(prev => [order, ...prev]);
+      toast.success(`Purchase order for ${order.supplierName} created successfully`);
+    }
     setSelectedVendorForPO(null);
   };
 
@@ -96,8 +102,18 @@ const Vendors: React.FC = () => {
     setAddVendorDialogOpen(true);
   };
 
+  const handleEditPurchaseOrder = (order: PurchaseOrder) => {
+    setEditingPurchaseOrder(order);
+    setAddPurchaseOrderDialogOpen(true);
+  };
+
   const handleCreatePurchaseOrder = (vendorId: string) => {
     setSelectedVendorForPO(vendorId);
+    setAddPurchaseOrderDialogOpen(true);
+  };
+
+  const handleCreatePurchaseOrderForDate = (date: Date) => {
+    setPreSelectedDateForPO(date);
     setAddPurchaseOrderDialogOpen(true);
   };
 
@@ -344,7 +360,11 @@ const Vendors: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="calendar">
-          <VendorCalendar purchaseOrders={purchaseOrders} />
+          <VendorCalendar
+            purchaseOrders={purchaseOrders}
+            onCreateOrderForDate={handleCreatePurchaseOrderForDate}
+            onEditOrder={handleEditPurchaseOrder}
+          />
         </TabsContent>
 
         <TabsContent value="timeline">
@@ -369,10 +389,19 @@ const Vendors: React.FC = () => {
       
       <AddPurchaseOrderDialog 
         open={addPurchaseOrderDialogOpen}
-        onOpenChange={setAddPurchaseOrderDialogOpen}
+        onOpenChange={(open) => {
+          setAddPurchaseOrderDialogOpen(open);
+          if (!open) {
+            setEditingPurchaseOrder(null);
+            setPreSelectedDateForPO(null);
+            setSelectedVendorForPO(null);
+          }
+        }}
         suppliers={suppliers}
-        onOrderAdded={handleAddPurchaseOrder}
+        onOrderSubmit={handlePurchaseOrderSubmit}
         preSelectedVendorId={selectedVendorForPO}
+        editingPurchaseOrder={editingPurchaseOrder}
+        preSelectedDate={preSelectedDateForPO}
       />
     </div>
   );
