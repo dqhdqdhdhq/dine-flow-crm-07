@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +8,7 @@ import { format, isSameDay } from 'date-fns';
 import { ChevronLeft, ChevronRight, Package, Truck, Calendar as CalendarIcon } from 'lucide-react';
 import { PurchaseOrder } from '@/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import VendorCalendarWeekView from './VendorCalendarWeekView';
 import VendorCalendarDayView from './VendorCalendarDayView';
 
@@ -44,21 +46,60 @@ const VendorCalendar: React.FC<VendorCalendarProps> = ({ purchaseOrders = [] }) 
 
   const DayContentWithEvents = ({ date }: { date: Date }) => {
     const dayEvents = getEventsForDate(date);
+
+    if (dayEvents.length === 0) {
+      return <>{date.getDate()}</>;
+    }
+
     const hasOrder = dayEvents.some(order => isSameDay(new Date(order.orderDate), date));
     const hasDelivery = dayEvents.some(order => isSameDay(new Date(order.expectedDeliveryDate), date));
 
     return (
-        <>
+      <HoverCard openDelay={200} closeDelay={100}>
+        <HoverCardTrigger asChild>
+          <div className="relative w-full h-full flex items-center justify-center">
             {date.getDate()}
             {(hasOrder || hasDelivery) && (
-                <div className="absolute bottom-1.5 flex items-center justify-center w-full">
-                    <div className="flex space-x-1">
-                        {hasOrder && <div className="h-1.5 w-1.5 rounded-full bg-blue-500" title="Order Placed" />}
-                        {hasDelivery && <div className="h-1.5 w-1.5 rounded-full bg-green-500" title="Expected Delivery" />}
-                    </div>
+              <div className="absolute bottom-1.5 flex items-center justify-center w-full">
+                <div className="flex space-x-1">
+                  {hasOrder && <div className="h-1.5 w-1.5 rounded-full bg-blue-500" title="Order Placed" />}
+                  {hasDelivery && <div className="h-1.5 w-1.5 rounded-full bg-green-500" title="Expected Delivery" />}
                 </div>
+              </div>
             )}
-        </>
+          </div>
+        </HoverCardTrigger>
+        <HoverCardContent className="w-80 z-50" side="top" align="center">
+          <div className="space-y-1">
+            <h4 className="text-sm font-semibold">{format(date, 'MMM dd, yyyy')}</h4>
+            <div className="space-y-3 pt-2">
+              {dayEvents.map(order => {
+                const isOrderDate = isSameDay(new Date(order.orderDate), date);
+                const isDeliveryDate = isSameDay(new Date(order.expectedDeliveryDate), date);
+                return (
+                  <div key={`${order.id}-${date.toISOString()}`} className="text-sm">
+                    <p className="font-medium text-xs">{order.supplierName}</p>
+                    <div className="text-xs text-muted-foreground space-y-0.5 mt-1">
+                      {isOrderDate && (
+                        <div className="flex items-center gap-1.5">
+                          <Package className="h-3 w-3 text-blue-500" />
+                          <span>Order Placed</span>
+                        </div>
+                      )}
+                      {isDeliveryDate && (
+                        <div className="flex items-center gap-1.5">
+                          <Truck className="h-3 w-3 text-green-500" />
+                          <span>Expected Delivery</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </HoverCardContent>
+      </HoverCard>
     );
   };
 
