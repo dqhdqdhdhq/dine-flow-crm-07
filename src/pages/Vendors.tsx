@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, Store, FileText, Calendar, Filter, SlidersHorizontal, Grid, List, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Plus, Search, Store, FileText, Calendar, Filter, SlidersHorizontal, Grid, List, MoreHorizontal, Trash2, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -21,7 +21,7 @@ import AddVendorDialog from '@/components/vendors/AddVendorDialog';
 import AddPurchaseOrderDialog from '@/components/vendors/AddPurchaseOrderDialog';
 import { Badge } from '@/components/ui/badge';
 import { mockSuppliers, mockPurchaseOrders, mockOrderTemplates } from '@/data/vendorsData';
-import { Supplier, PurchaseOrder, OrderTemplate, OrderTemplateItem } from '@/types';
+import { Supplier, PurchaseOrder, OrderTemplate, OrderTemplateItem, OrderStatus } from '@/types';
 import { toast } from 'sonner';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useFieldArray } from "react-hook-form";
@@ -32,6 +32,92 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { v4 as uuidv4 } from "uuid";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
+const statusColors: Record<OrderStatus, "default" | "secondary" | "destructive" | "outline" | "success" | "warning"> = {
+  draft: "secondary",
+  ordered: "default",
+  shipped: "warning",
+  'partially-received': "warning",
+  received: "success",
+  cancelled: "destructive",
+};
+
+const statusTransitions: Record<OrderStatus, OrderStatus[]> = {
+    draft: ['ordered', 'cancelled'],
+    ordered: ['shipped', 'cancelled'],
+    shipped: ['partially-received', 'received'],
+    'partially-received': ['received', 'cancelled'],
+    received: [],
+    cancelled: [],
+};
+
+const OrderManagementList: React.FC<{
+  purchaseOrders: PurchaseOrder[];
+  onUpdateStatus: (orderId: string, status: OrderStatus) => void;
+}> = ({ purchaseOrders, onUpdateStatus }) => {
+  if (purchaseOrders.length === 0) {
+    return (
+      <Card>
+        <CardContent className="pt-6 text-center text-muted-foreground">
+          <p>No purchase orders to manage.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Order</TableHead>
+              <TableHead>Supplier</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Order Date</TableHead>
+              <TableHead className="text-right">Total</TableHead>
+              <TableHead className="w-[50px]"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {purchaseOrders.map((order) => (
+              <TableRow key={order.id}>
+                <TableCell className="font-medium truncate" style={{maxWidth: '100px'}} title={order.id}>{order.id.substring(0, 8)}...</TableCell>
+                <TableCell>{order.supplierName}</TableCell>
+                <TableCell>
+                  <Badge variant={statusColors[order.status]} className="capitalize">{order.status.replace('-', ' ')}</Badge>
+                </TableCell>
+                <TableCell>{format(new Date(order.orderDate), "MMM d, yyyy")}</TableCell>
+                <TableCell className="text-right">${order.totalAmount.toFixed(2)}</TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {statusTransitions[order.status].length > 0 ? (
+                        statusTransitions[order.status].map(newStatus => (
+                          <DropdownMenuItem key={newStatus} onClick={() => onUpdateStatus(order.id, newStatus)}>
+                            Mark as <span className="capitalize ml-1">{newStatus.replace('-', ' ')}</span>
+                          </DropdownMenuItem>
+                        ))
+                      ) : (
+                        <DropdownMenuItem disabled>No actions</DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+};
 
 const orderTemplateFormSchema = z.object({
   name: z.string().min(1, "Template name is required."),
@@ -288,6 +374,15 @@ const Vendors: React.FC = () => {
     setSelectedVendorForPO(null);
   };
 
+  const handleUpdateOrderStatus = (orderId: string, status: OrderStatus) => {
+    setPurchaseOrders(prevOrders =>
+      prevOrders.map(order =>
+        order.id === orderId ? { ...order, status, updatedAt: new Date().toISOString() } : order
+      )
+    );
+    toast.success(`Order status updated to ${status}.`);
+  };
+
   const handleAddOrderTemplate = (newTemplate: OrderTemplate) => {
     setOrderTemplates(prev => [newTemplate, ...prev]);
     toast.success(`Template "${newTemplate.name}" created successfully.`);
@@ -319,7 +414,7 @@ const Vendors: React.FC = () => {
     handleAddPurchaseOrder(newOrder);
     toast.info(`New draft PO created from template "${template.name}".`);
     setSelectedVendor(template.supplierId);
-    setActiveTab('timeline');
+    setActiveTab('manage-orders');
   };
 
   // Handle vendor card actions
@@ -478,7 +573,7 @@ const Vendors: React.FC = () => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <TabsList className="grid w-full sm:w-auto sm:grid-cols-5">
+          <TabsList className="grid w-full sm:w-auto sm:grid-cols-6">
             <TabsTrigger value="list">
               <Store className="mr-2 h-4 w-4" />
               Vendors
@@ -498,6 +593,10 @@ const Vendors: React.FC = () => {
             <TabsTrigger value="templates">
               <FileText className="mr-2 h-4 w-4" />
               Templates
+            </TabsTrigger>
+            <TabsTrigger value="manage-orders">
+              <ClipboardList className="mr-2 h-4 w-4" />
+              Manage Orders
             </TabsTrigger>
           </TabsList>
 
@@ -607,6 +706,10 @@ const Vendors: React.FC = () => {
 
         <TabsContent value="templates">
           <OrderTemplatesList templates={orderTemplates} onGenerateOrder={handleGenerateOrderFromTemplate} />
+        </TabsContent>
+
+        <TabsContent value="manage-orders">
+          <OrderManagementList purchaseOrders={purchaseOrders} onUpdateStatus={handleUpdateOrderStatus} />
         </TabsContent>
       </Tabs>
       
