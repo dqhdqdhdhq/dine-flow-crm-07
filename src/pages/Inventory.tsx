@@ -1,12 +1,13 @@
-
 import React, { useState } from 'react';
-import { Search, Plus, Package, AlertTriangle, TrendingDown, Clock } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import InventoryOverview from '@/components/inventory/InventoryOverview';
 import InventoryCategory from '@/components/inventory/InventoryCategory';
 import InventoryItemDetail from '@/components/inventory/InventoryItemDetail';
+import AddInventoryItemDialog from '@/components/inventory/AddInventoryItemDialog';
+import { toast } from 'sonner';
+import { Textarea } from '@/components/ui/textarea';
 
 type ViewMode = 'dashboard' | 'category' | 'item-detail';
 
@@ -15,6 +16,7 @@ const Inventory: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('dashboard');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   const handleCategorySelect = (category: string) => {
     setSelectedCategory(category);
@@ -36,6 +38,13 @@ const Inventory: React.FC = () => {
     }
   };
 
+  const handleAddItem = (item: any) => {
+    // In a real application, you would update your state or database here.
+    // For now, we'll just show a success message.
+    console.log('New item to be added:', item);
+    toast.success(`${item.name} has been added to inventory.`);
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Clean Header */}
@@ -52,7 +61,10 @@ const Inventory: React.FC = () => {
             {viewMode === 'item-detail' && 'Item Details'}
           </h1>
         </div>
-        <Button className="gap-2 bg-black text-white hover:bg-gray-800 rounded-full px-6">
+        <Button
+          onClick={() => setIsAddDialogOpen(true)}
+          className="gap-2 bg-black text-white hover:bg-gray-800 rounded-full px-6"
+        >
           <Plus className="h-4 w-4" />
           Add Item
         </Button>
@@ -93,6 +105,12 @@ const Inventory: React.FC = () => {
           onBack={handleBack}
         />
       )}
+
+      <AddInventoryItemDialog
+        isOpen={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        onAddItem={handleAddItem}
+      />
     </div>
   );
 };
