@@ -1,4 +1,4 @@
-import { Supplier, PurchaseOrder, OrderTemplate } from '@/types';
+import { Supplier, PurchaseOrder, OrderTemplate, OrderTemplateItem } from '@/types';
 
 export const mockSuppliers: Supplier[] = [
   {

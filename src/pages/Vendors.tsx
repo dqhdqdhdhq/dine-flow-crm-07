@@ -21,7 +21,7 @@ import AddVendorDialog from '@/components/vendors/AddVendorDialog';
 import AddPurchaseOrderDialog from '@/components/vendors/AddPurchaseOrderDialog';
 import { Badge } from '@/components/ui/badge';
 import { mockSuppliers, mockPurchaseOrders, mockOrderTemplates } from '@/data/vendorsData';
-import { Supplier, PurchaseOrder, OrderTemplate } from '@/types';
+import { Supplier, PurchaseOrder, OrderTemplate, OrderTemplateItem } from '@/types';
 import { toast } from 'sonner';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useFieldArray } from "react-hook-form";
@@ -311,6 +311,8 @@ const Vendors: React.FC = () => {
     
     handleAddPurchaseOrder(newOrder);
     toast.info(`New draft PO created from template "${template.name}".`);
+    setSelectedVendor(template.supplierId);
+    setActiveTab('timeline');
   };
 
   // Handle vendor card actions

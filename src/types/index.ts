@@ -150,12 +150,20 @@ export interface Recurrence {
   day?: number;
 }
 
+export interface OrderTemplateItem {
+  inventoryItemId: string;
+  name:string;
+  quantity: number;
+  unit: string;
+  unitPrice: number;
+}
+
 export interface OrderTemplate {
   id: string;
   name: string;
   supplierId: string;
   supplierName: string;
-  items: Omit<PurchaseOrderItem, 'id' | 'receivedQuantity' | 'notes'>[];
+  items: OrderTemplateItem[];
   recurrence: Recurrence;
   nextGenerationDate: string; // ISO string
   autoGenerate: boolean;
