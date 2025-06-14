@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -94,9 +93,14 @@ const AddVendorDialog: React.FC<AddVendorDialogProps> = ({
       : [];
     
     // Create a new vendor object or update existing one
-    const vendorData = {
+    const vendorData: Supplier = {
       id: editingVendor?.id || `supplier-${Date.now()}`,
-      ...values,
+      name: values.name,
+      contactPerson: values.contactPerson,
+      phone: values.phone,
+      email: values.email,
+      address: values.address,
+      status: values.status,
       productsSupplied: productsArray,
       createdAt: editingVendor?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
