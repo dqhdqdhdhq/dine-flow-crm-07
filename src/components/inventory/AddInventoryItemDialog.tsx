@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -23,11 +23,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { v4 as uuidv4 } from 'uuid';
-import { Image as ImageIcon } from 'lucide-react';
+import { Image as ImageIcon, X } from 'lucide-react';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
-  imageUrl: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
+  // Remove imageUrl from form schema, we'll handle file separately
   category: z.string().min(2, { message: "Category is required." }),
   unit: z.string().min(1, { message: "Unit is required (e.g., kg, bottle, item)." }),
   currentStock: z.coerce.number().min(0, { message: "Stock cannot be negative." }).default(0),
@@ -43,7 +43,7 @@ type AddItemFormValues = z.infer<typeof formSchema>;
 interface AddInventoryItemDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onAddItem: (item: any) => void; // A more specific type should be used here in a real app
+  onAddItem: (item: any) => void; // Use more specific type in real app
 }
 
 const AddInventoryItemDialog: React.FC<AddInventoryItemDialogProps> = ({
@@ -55,7 +55,6 @@ const AddInventoryItemDialog: React.FC<AddInventoryItemDialogProps> = ({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
-      imageUrl: '',
       category: '',
       unit: '',
       currentStock: 0,
@@ -67,7 +66,45 @@ const AddInventoryItemDialog: React.FC<AddInventoryItemDialogProps> = ({
     },
   });
 
-  const imageUrlValue = form.watch('imageUrl');
+  // State for handling image file and preview
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Clean up preview URL when dialog closes
+  React.useEffect(() => {
+    if (!isOpen) {
+      setImageFile(null);
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+      setImagePreview(null);
+      form.reset();
+    }
+    // eslint-disable-next-line
+  }, [isOpen]);
+
+  // Handle file input change
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  // Remove selected image
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const onSubmit = (values: AddItemFormValues) => {
     const newItem = {
@@ -75,9 +112,15 @@ const AddInventoryItemDialog: React.FC<AddInventoryItemDialogProps> = ({
       id: uuidv4(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      // Store preview URL for now; in real app upload the file and save the returned URL
+      imageFile: imageFile || null,
+      imagePreview: imagePreview || null,
     };
     onAddItem(newItem);
     form.reset();
+    setImageFile(null);
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImagePreview(null);
     onOpenChange(false);
   };
 
@@ -93,13 +136,38 @@ const AddInventoryItemDialog: React.FC<AddInventoryItemDialogProps> = ({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
             <div className="flex flex-col sm:flex-row gap-6 items-start">
-              <div className="w-full sm:w-32 sm:h-32 h-32 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                {imageUrlValue ? (
-                  <img src={imageUrlValue} alt="Item preview" className="w-full h-full object-cover rounded-lg"/>
+              {/* Image preview and upload controls */}
+              <div className="w-full sm:w-32 sm:h-32 h-32 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 relative group">
+                {imagePreview ? (
+                  <div className="w-full h-full relative">
+                    <img src={imagePreview} alt="Item preview" className="w-full h-full object-cover rounded-lg" />
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute top-1 right-1 bg-white/80 rounded-full p-1 shadow hover:bg-white z-10"
+                      aria-label="Remove image"
+                    >
+                      <X className="w-4 h-4 text-gray-700" />
+                    </button>
+                  </div>
                 ) : (
                   <ImageIcon className="w-12 h-12 text-gray-400" />
                 )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  aria-label="Upload item image"
+                />
+                {!imagePreview && (
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-white rounded px-2 py-1 text-xs shadow text-gray-700 opacity-90 group-hover:opacity-100">
+                    Choose File
+                  </div>
+                )}
               </div>
+              {/* Main item fields */}
               <div className="flex-grow space-y-4 w-full">
                 <FormField
                   control={form.control}
@@ -114,22 +182,9 @@ const AddInventoryItemDialog: React.FC<AddInventoryItemDialogProps> = ({
                     </FormItem>
                   )}
                 />
-                 <FormField
-                  control={form.control}
-                  name="imageUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Image URL</FormLabel>
-                      <FormControl>
-                        <Input placeholder="https://example.com/image.png" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
             </div>
-            
+
             <FormField
               control={form.control}
               name="description"
@@ -258,3 +313,4 @@ const AddInventoryItemDialog: React.FC<AddInventoryItemDialogProps> = ({
 };
 
 export default AddInventoryItemDialog;
+
