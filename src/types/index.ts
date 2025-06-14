@@ -87,16 +87,16 @@ export interface Table {
 export interface InventoryItem {
   id: string;
   name: string;
-  description: string;
-  sku: string;
+  description?: string;
+  sku?: string;
   category: string;
   unit: string;
-  unitCost: number;
-  quantityOnHand: number;
-  reorderPoint: number;
-  reorderQuantity: number;
-  supplierId: string;
-  notes: string;
+  unitCost?: number;
+  quantityOnHand?: number;
+  reorderPoint?: number;
+  reorderQuantity?: number;
+  supplierId?: string;
+  notes?: string;
   defaultSupplierId?: string; // Added for backward compatibility
   defaultSupplierName?: string; // Added for backward compatibility
   currentStock?: number; // Added for backward compatibility

@@ -1,17 +1,50 @@
+
 import React, { useState } from 'react';
 import { Search, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import InventoryOverview from '@/components/inventory/InventoryOverview';
-import InventoryCategory from '@/components/inventory/InventoryCategory';
 import InventoryItemDetail from '@/components/inventory/InventoryItemDetail';
 import AddInventoryItemDialog from '@/components/inventory/AddInventoryItemDialog';
 import { toast } from 'sonner';
-import { Textarea } from '@/components/ui/textarea';
+import { InventoryItem } from '@/types';
+import InventoryItemsList from '@/components/inventory/InventoryItemsList';
 
 type ViewMode = 'dashboard' | 'category' | 'item-detail';
 
+const initialInventory: InventoryItem[] = [
+  {
+    id: 'item-1',
+    name: 'Organic Tomatoes',
+    category: 'Fresh Produce',
+    currentStock: 50,
+    unit: 'kg',
+    cost: 2.5,
+    lowStockThreshold: 10,
+    imageUrl: 'https://images.unsplash.com/photo-1591115765942-e613f2b45e7f?q=80&w=300&auto=format&fit=crop',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    description: "Ripe organic tomatoes, perfect for salads and sauces.",
+    sku: "FP-TOM-001"
+  },
+  {
+    id: 'item-2',
+    name: 'Parmigiano Reggiano',
+    category: 'Pantry',
+    currentStock: 20,
+    unit: 'wheel',
+    cost: 300,
+    lowStockThreshold: 5,
+    imageUrl: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?q=80&w=300&auto=format&fit=crop',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    description: "Aged 24 months, imported from Italy.",
+    sku: "PAN-CHE-001"
+  }
+];
+
 const Inventory: React.FC = () => {
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>(initialInventory);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('dashboard');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -38,10 +71,18 @@ const Inventory: React.FC = () => {
     }
   };
 
-  const handleAddItem = (item: any) => {
-    // In a real application, you would update your state or database here.
-    // For now, we'll just show a success message.
+  const handleAddItem = (item: Omit<InventoryItem, 'imageUrl'> & { imagePreview?: string | null }) => {
     console.log('New item to be added:', item);
+    const newItem: InventoryItem = {
+      ...item,
+      imageUrl: item.imagePreview || undefined,
+    };
+    
+    // Clean up properties that are not part of InventoryItem
+    delete (newItem as any).imagePreview;
+    delete (newItem as any).imageFile;
+
+    setInventoryItems(prevItems => [...prevItems, newItem]);
     toast.success(`${item.name} has been added to inventory.`);
   };
 
@@ -92,8 +133,8 @@ const Inventory: React.FC = () => {
       )}
 
       {viewMode === 'category' && selectedCategory && (
-        <InventoryCategory 
-          category={selectedCategory}
+        <InventoryItemsList
+          items={inventoryItems.filter(item => item.category === selectedCategory)}
           searchQuery={searchQuery}
           onItemSelect={handleItemSelect}
         />
