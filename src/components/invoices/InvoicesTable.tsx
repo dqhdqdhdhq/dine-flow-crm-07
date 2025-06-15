@@ -12,6 +12,7 @@ import {
   ContextMenuSeparator,
 } from "@/components/ui/context-menu";
 import { Eye, CheckCircle, DollarSign, ShieldX, Download } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
 
 interface InvoicesTableProps {
   invoices: Invoice[];
@@ -20,10 +21,15 @@ interface InvoicesTableProps {
 }
 
 const InvoicesTable: React.FC<InvoicesTableProps> = ({ invoices, isFiltered, onInvoiceClick }) => {
-  const handleAction = (action: string, invoiceId: string) => {
+  const { toast } = useToast();
+
+  const handleAction = (action: string, invoice: Invoice) => {
     // In a real app, this would dispatch an action to the backend
-    console.log(`Action: ${action} on Invoice ID: ${invoiceId}`);
-    // You could show a toast notification here, e.g. toast.success(...)
+    console.log(`Action: ${action} on Invoice ID: ${invoice.id}`);
+    toast({
+      title: "Action Submitted",
+      description: `${action} request for invoice #${invoice.invoiceNumber} has been submitted.`,
+    });
   };
   
   return (
@@ -67,25 +73,25 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({ invoices, isFiltered, onI
                     </ContextMenuItem>
                     <ContextMenuSeparator />
                     {invoice.status === 'pending-approval' && (
-                      <ContextMenuItem onSelect={() => handleAction('Approve', invoice.id)}>
+                      <ContextMenuItem onSelect={() => handleAction('Approve', invoice)}>
                         <CheckCircle className="mr-2 h-4 w-4" />
                         <span>Approve</span>
                       </ContextMenuItem>
                     )}
                     {(invoice.status === 'approved' || invoice.status === 'overdue') && (
-                      <ContextMenuItem onSelect={() => handleAction('Mark as Paid', invoice.id)}>
+                      <ContextMenuItem onSelect={() => handleAction('Mark as Paid', invoice)}>
                         <DollarSign className="mr-2 h-4 w-4" />
                         <span>Mark as Paid</span>
                       </ContextMenuItem>
                     )}
                     {!['disputed', 'cancelled', 'paid', 'partially-paid'].includes(invoice.status) && (
-                      <ContextMenuItem onSelect={() => handleAction('Dispute', invoice.id)}>
+                      <ContextMenuItem onSelect={() => handleAction('Dispute', invoice)}>
                         <ShieldX className="mr-2 h-4 w-4" />
                         <span>Dispute Invoice</span>
                       </ContextMenuItem>
                     )}
                     <ContextMenuSeparator />
-                    <ContextMenuItem onSelect={() => handleAction('Download PDF', invoice.id)}>
+                    <ContextMenuItem onSelect={() => handleAction('Download PDF', invoice)}>
                       <Download className="mr-2 h-4 w-4" />
                       <span>Download PDF</span>
                     </ContextMenuItem>

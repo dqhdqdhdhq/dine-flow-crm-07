@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { format } from 'date-fns';
-import { Invoice, InvoiceStatus } from '@/types';
+import { Invoice } from '@/types';
 import { Button } from '@/components/ui/button';
 import { getInvoiceStatusColor, getInvoiceCategoryLabel, getInvoiceStatusLabel } from '@/data/invoicesData';
 import {
@@ -15,7 +16,15 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, User, Tag, DollarSign, FileText, Briefcase, Hash } from 'lucide-react';
+import { Calendar, Tag, DollarSign, FileText, Briefcase, Hash, MoreVertical, CheckCircle, ShieldX, Download } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
 
 interface InvoiceDetailViewProps {
   invoice: Invoice | null;
@@ -35,7 +44,19 @@ const DetailRow: React.FC<{ icon: React.ElementType, label: string, value: strin
 
 
 const InvoiceDetailView: React.FC<InvoiceDetailViewProps> = ({ invoice, isOpen, onClose }) => {
+  const { toast } = useToast();
+
   if (!invoice) return null;
+
+  const handleAction = (action: string) => {
+    if (!invoice) return;
+    // In a real app, this would dispatch an action to the backend
+    console.log(`Action: ${action} on Invoice ID: ${invoice.id}`);
+    toast({
+      title: "Action Submitted",
+      description: `${action} request for invoice #${invoice.invoiceNumber} has been submitted.`,
+    });
+  };
 
   const statusLabel = getInvoiceStatusLabel(invoice.status);
   const statusColor = getInvoiceStatusColor(invoice.status);
@@ -85,7 +106,39 @@ const InvoiceDetailView: React.FC<InvoiceDetailViewProps> = ({ invoice, isOpen, 
           <Button variant="outline" asChild>
             <SheetClose>Close</SheetClose>
           </Button>
-          <Button>Take Action</Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button>
+                Take Action
+                <MoreVertical className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {invoice.status === 'pending-approval' && (
+                <DropdownMenuItem onSelect={() => handleAction('Approve')}>
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  <span>Approve</span>
+                </DropdownMenuItem>
+              )}
+              {(invoice.status === 'approved' || invoice.status === 'overdue') && (
+                <DropdownMenuItem onSelect={() => handleAction('Mark as Paid')}>
+                  <DollarSign className="mr-2 h-4 w-4" />
+                  <span>Mark as Paid</span>
+                </DropdownMenuItem>
+              )}
+              {!['disputed', 'cancelled', 'paid', 'partially-paid'].includes(invoice.status) && (
+                <DropdownMenuItem onSelect={() => handleAction('Dispute')}>
+                  <ShieldX className="mr-2 h-4 w-4" />
+                  <span>Dispute Invoice</span>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => handleAction('Download PDF')}>
+                <Download className="mr-2 h-4 w-4" />
+                <span>Download PDF</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </SheetFooter>
       </SheetContent>
     </Sheet>

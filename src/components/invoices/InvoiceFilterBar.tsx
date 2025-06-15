@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { Search, Filter, ChevronsUpDown } from 'lucide-react';
+import { Search, Filter, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -46,8 +47,8 @@ const InvoiceFilterBar: React.FC<InvoiceFilterBarProps> = ({
           </h4>
         </div>
         <CollapsibleTrigger asChild>
-          <Button variant="ghost" size="sm" className="w-9 p-0">
-            <ChevronsUpDown className="h-4 w-4" />
+          <Button variant="ghost" size="sm" className="w-9 p-0 group">
+            <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-180" />
             <span className="sr-only">Toggle</span>
           </Button>
         </CollapsibleTrigger>
