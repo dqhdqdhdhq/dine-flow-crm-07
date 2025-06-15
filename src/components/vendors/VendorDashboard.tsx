@@ -52,17 +52,13 @@ const VendorDashboard: React.FC<VendorDashboardProps> = ({
   return (
     <div className="space-y-6 animate-fade-in">
       <VendorStatsCards orders={supplierOrders} />
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <VendorProfileCard supplier={selectedSupplier} />
-          <RecentOrdersList orders={supplierOrders} />
-        </div>
-        <div className="space-y-6">
-          <SpendingOverviewCard spendingData={spendingData} />
-          <UpcomingDeliveriesCard deliveries={upcomingDeliveries} />
-          <FrequentItemsCard items={frequentItems} />
-        </div>
+      <VendorProfileCard supplier={selectedSupplier} />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <SpendingOverviewCard spendingData={spendingData} />
+        <UpcomingDeliveriesCard deliveries={upcomingDeliveries} />
+        <FrequentItemsCard items={frequentItems} />
       </div>
+      <RecentOrdersList orders={supplierOrders} />
     </div>
   );
 };
