@@ -1,5 +1,5 @@
 import React from 'react';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { Invoice } from '@/types';
 import { Button } from '@/components/ui/button';
 import { getInvoiceStatusColor, getInvoiceCategoryLabel, getInvoiceStatusLabel } from '@/data/invoicesData';
@@ -15,7 +15,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Tag, DollarSign, FileText, Briefcase, Hash, MoreVertical, CheckCircle, ShieldX, Download } from 'lucide-react';
+import { Calendar, Tag, DollarSign, FileText, Briefcase, Hash, MoreVertical, CheckCircle, ShieldX, Download, History, User } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,11 +25,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from 'sonner';
 
+interface Activity {
+  action: string;
+  user: string;
+  timestamp: string;
+}
+
 interface InvoiceDetailViewProps {
   invoice: Invoice | null;
   isOpen: boolean;
   onClose: () => void;
-  onUpdateInvoice: (invoice: Invoice) => void;
+  onUpdateInvoice: (invoice: Invoice, action: string) => void;
+  activities: Activity[];
 }
 
 const DetailRow: React.FC<{ icon: React.ElementType, label: string, value: string | React.ReactNode }> = ({ icon: Icon, label, value }) => (
@@ -42,8 +49,59 @@ const DetailRow: React.FC<{ icon: React.ElementType, label: string, value: strin
     </div>
 );
 
+const getActionVerb = (action: string) => {
+    switch(action) {
+        case 'Approve': return 'approved';
+        case 'Dispute': return 'disputed';
+        case 'Mark as Paid': return 'marked as paid';
+        default: return `performed: ${action}`;
+    }
+}
 
-const InvoiceDetailView: React.FC<InvoiceDetailViewProps> = ({ invoice, isOpen, onClose, onUpdateInvoice }) => {
+const ActivityItem: React.FC<{ activity: Activity }> = ({ activity }) => (
+    <div className="flex items-start gap-4 py-2">
+        <div className="flex-shrink-0">
+            <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
+                <User className="h-5 w-5 text-muted-foreground" />
+            </div>
+        </div>
+        <div>
+            <p className="text-sm">
+                <span className="font-semibold">{activity.user}</span>
+                <span className="text-muted-foreground"> {getActionVerb(activity.action)} this invoice.</span>
+            </p>
+            <p className="text-xs text-muted-foreground">
+                {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}
+            </p>
+        </div>
+    </div>
+);
+
+
+const ActivityHistory: React.FC<{ activities: Activity[] }> = ({ activities }) => {
+    if (!activities) return null;
+
+    return (
+        <div className="py-3">
+            <div className="flex items-center gap-3 text-sm text-muted-foreground mb-3">
+                <History className="h-4 w-4" />
+                <span>Activity History</span>
+            </div>
+            {activities.length === 0 ? (
+                 <p className="text-sm text-muted-foreground text-center py-4">No activity yet.</p>
+            ) : (
+                <div className="space-y-2">
+                    {[...activities].reverse().map((activity, index) => (
+                        <ActivityItem key={index} activity={activity} />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
+
+const InvoiceDetailView: React.FC<InvoiceDetailViewProps> = ({ invoice, isOpen, onClose, onUpdateInvoice, activities }) => {
   if (!invoice) return null;
 
   const handleAction = (action: string) => {
@@ -73,7 +131,7 @@ const InvoiceDetailView: React.FC<InvoiceDetailViewProps> = ({ invoice, isOpen, 
         return;
     }
 
-    onUpdateInvoice(updatedInvoice);
+    onUpdateInvoice(updatedInvoice, action);
     toast.success(toastMessage);
     onClose();
   };
@@ -120,6 +178,10 @@ const InvoiceDetailView: React.FC<InvoiceDetailViewProps> = ({ invoice, isOpen, 
                       <p className="text-sm bg-muted/50 p-3 rounded-md">{invoice.notes}</p>
                   </div>
                 )}
+                
+                <Separator />
+                <ActivityHistory activities={activities} />
+
             </div>
         </ScrollArea>
         <SheetFooter className="p-6 bg-muted/30 border-t">

@@ -19,8 +19,15 @@ import { Toaster } from "@/components/ui/sonner";
 
 type View = 'action-required' | 'recent-activity' | 'all-invoices';
 
+type Activity = {
+  action: string;
+  user: string;
+  timestamp: string;
+};
+
 const FinancialHub: React.FC = () => {
   const [invoices, setInvoices] = useState<Invoice[]>(mockInvoices);
+  const [activities, setActivities] = useState<Record<string, Activity[]>>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState<InvoiceCategory | 'all'>('all');
@@ -74,13 +81,24 @@ const FinancialHub: React.FC = () => {
     setTimeout(() => setSelectedInvoice(null), 300);
   };
 
-  const handleUpdateInvoice = (updatedInvoice: Invoice) => {
+  const handleUpdateInvoice = (updatedInvoice: Invoice, action: string) => {
     setInvoices(prevInvoices => 
       prevInvoices.map(inv => (inv.id === updatedInvoice.id ? updatedInvoice : inv))
     );
     if (selectedInvoice && selectedInvoice.id === updatedInvoice.id) {
       setSelectedInvoice(updatedInvoice);
     }
+    
+    const newActivity: Activity = {
+      action,
+      user: 'Admin', // In a real app, this would be the logged-in user
+      timestamp: new Date().toISOString(),
+    };
+
+    setActivities(prev => ({
+        ...prev,
+        [updatedInvoice.id]: [...(prev[updatedInvoice.id] || []), newActivity]
+    }));
   };
 
   const TABS: { label: string; value: View }[] = [
@@ -187,6 +205,7 @@ const FinancialHub: React.FC = () => {
         isOpen={isDetailViewOpen}
         onClose={closeDetailView}
         onUpdateInvoice={handleUpdateInvoice}
+        activities={selectedInvoice ? activities[selectedInvoice.id] || [] : []}
       />
 
       <motion.div
