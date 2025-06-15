@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Invoice } from '@/types';
@@ -18,28 +19,28 @@ interface MetricCardProps {
 }
 
 const variantClasses = {
-  default: 'bg-card/80 dark:bg-card/60',
-  critical: 'bg-red-900/30 dark:bg-red-500/15',
-  warning: 'bg-yellow-900/30 dark:bg-yellow-500/15',
-  success: 'bg-green-900/30 dark:bg-green-500/15',
+  default: 'bg-card',
+  critical: 'bg-rose-100 dark:bg-rose-950 text-rose-900 dark:text-rose-200 !border-rose-200 dark:!border-rose-900',
+  warning: 'bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 !border-amber-200 dark:!border-amber-900',
+  success: 'bg-emerald-100 dark:bg-emerald-950 text-emerald-900 dark:text-emerald-200 !border-emerald-200 dark:!border-emerald-900',
 };
 
 const iconVariantClasses = {
     default: 'text-muted-foreground',
-    critical: 'text-red-500',
-    warning: 'text-yellow-600',
-    success: 'text-green-600',
+    critical: 'text-rose-500 dark:text-rose-400',
+    warning: 'text-amber-500 dark:text-amber-400',
+    success: 'text-emerald-500 dark:text-emerald-400',
 };
 
 const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon: Icon, variant = 'default', subtleText }) => (
-  <Card className={cn("transition-shadow hover:shadow-xl backdrop-blur-xl border-white/10", variantClasses[variant])}>
-    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-      <CardTitle className="text-sm font-medium">{title}</CardTitle>
-      <Icon className={cn("h-4 w-4", iconVariantClasses[variant])} />
+  <Card className={cn("transition-shadow hover:shadow-lg", variantClasses[variant])}>
+    <CardHeader className="flex-row items-center justify-between p-4 pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        <Icon className={cn("h-5 w-5", iconVariantClasses[variant])} />
     </CardHeader>
-    <CardContent>
-      <div className="text-2xl font-bold">{value}</div>
-      {subtleText && <p className="text-xs text-muted-foreground">{subtleText}</p>}
+    <CardContent className="p-4 pt-0">
+      <div className="text-3xl font-bold tracking-tight">{value}</div>
+      {subtleText && <p className="text-xs text-muted-foreground mt-1">{subtleText}</p>}
     </CardContent>
   </Card>
 );
