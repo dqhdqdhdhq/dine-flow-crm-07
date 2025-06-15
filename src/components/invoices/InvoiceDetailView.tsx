@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { format } from 'date-fns';
 import { Invoice } from '@/types';
@@ -24,12 +23,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from 'sonner';
 
 interface InvoiceDetailViewProps {
   invoice: Invoice | null;
   isOpen: boolean;
   onClose: () => void;
+  onUpdateInvoice: (invoice: Invoice) => void;
 }
 
 const DetailRow: React.FC<{ icon: React.ElementType, label: string, value: string | React.ReactNode }> = ({ icon: Icon, label, value }) => (
@@ -43,19 +43,39 @@ const DetailRow: React.FC<{ icon: React.ElementType, label: string, value: strin
 );
 
 
-const InvoiceDetailView: React.FC<InvoiceDetailViewProps> = ({ invoice, isOpen, onClose }) => {
-  const { toast } = useToast();
-
+const InvoiceDetailView: React.FC<InvoiceDetailViewProps> = ({ invoice, isOpen, onClose, onUpdateInvoice }) => {
   if (!invoice) return null;
 
   const handleAction = (action: string) => {
     if (!invoice) return;
-    // In a real app, this would dispatch an action to the backend
-    console.log(`Action: ${action} on Invoice ID: ${invoice.id}`);
-    toast({
-      title: "Action Submitted",
-      description: `${action} request for invoice #${invoice.invoiceNumber} has been submitted.`,
-    });
+
+    let updatedInvoice: Invoice = { ...invoice, updatedAt: new Date().toISOString() };
+    let toastMessage = "";
+
+    switch (action) {
+      case 'Approve':
+        updatedInvoice.status = 'approved';
+        toastMessage = `Invoice #${invoice.invoiceNumber} has been approved.`;
+        break;
+      case 'Mark as Paid':
+        updatedInvoice.status = 'paid';
+        updatedInvoice.paymentDate = new Date().toISOString();
+        toastMessage = `Invoice #${invoice.invoiceNumber} marked as paid.`;
+        break;
+      case 'Dispute':
+        updatedInvoice.status = 'disputed';
+        toastMessage = `Invoice #${invoice.invoiceNumber} has been disputed.`;
+        break;
+      case 'Download PDF':
+        toast.info(`Downloading PDF for invoice #${invoice.invoiceNumber}...`);
+        return;
+      default:
+        return;
+    }
+
+    onUpdateInvoice(updatedInvoice);
+    toast.success(toastMessage);
+    onClose();
   };
 
   const statusLabel = getInvoiceStatusLabel(invoice.status);

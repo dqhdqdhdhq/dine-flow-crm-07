@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Shield, ChevronDown, Search } from 'lucide-react';
@@ -16,10 +15,12 @@ import { differenceInDays } from 'date-fns';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import { Toaster } from "@/components/ui/sonner";
 
 type View = 'action-required' | 'recent-activity' | 'all-invoices';
 
 const FinancialHub: React.FC = () => {
+  const [invoices, setInvoices] = useState<Invoice[]>(mockInvoices);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState<InvoiceCategory | 'all'>('all');
@@ -39,28 +40,28 @@ const FinancialHub: React.FC = () => {
   }
 
   const filteredInvoices = useMemo(() => {
-    const baseInvoices = mockInvoices.filter((invoice) => {
+    const baseInvoices = invoices.filter((invoice) => {
       const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter;
       const matchesCategory = categoryFilter === 'all' || invoice.category === categoryFilter;
       return matchesStatus && matchesCategory;
     });
     return applySearch(baseInvoices, searchQuery);
-  }, [searchQuery, statusFilter, categoryFilter]);
+  }, [invoices, searchQuery, statusFilter, categoryFilter]);
 
   const actionableInvoices = useMemo(() => {
-    const baseInvoices = mockInvoices.filter(invoice => 
+    const baseInvoices = invoices.filter(invoice => 
       ['pending-approval', 'overdue', 'disputed'].includes(invoice.status)
     ).sort((a,b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
     return applySearch(baseInvoices, searchQuery);
-  }, [searchQuery]);
+  }, [invoices, searchQuery]);
 
   const recentInvoices = useMemo(() => {
     const today = new Date();
-    const baseInvoices = mockInvoices
+    const baseInvoices = invoices
         .filter(invoice => differenceInDays(today, new Date(invoice.updatedAt)) <= 7)
         .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
     return applySearch(baseInvoices, searchQuery);
-  }, [searchQuery]);
+  }, [invoices, searchQuery]);
 
   const handleInvoiceClick = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
@@ -71,6 +72,15 @@ const FinancialHub: React.FC = () => {
     setIsDetailViewOpen(false);
     // Give sheet time to close before clearing data
     setTimeout(() => setSelectedInvoice(null), 300);
+  };
+
+  const handleUpdateInvoice = (updatedInvoice: Invoice) => {
+    setInvoices(prevInvoices => 
+      prevInvoices.map(inv => (inv.id === updatedInvoice.id ? updatedInvoice : inv))
+    );
+    if (selectedInvoice && selectedInvoice.id === updatedInvoice.id) {
+      setSelectedInvoice(updatedInvoice);
+    }
   };
 
   const TABS: { label: string; value: View }[] = [
@@ -92,7 +102,7 @@ const FinancialHub: React.FC = () => {
       </div>
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <InvoiceMetrics invoices={mockInvoices} />
+        <InvoiceMetrics invoices={invoices} />
       </motion.div>
       
       <div className="relative w-full">
@@ -167,7 +177,7 @@ const FinancialHub: React.FC = () => {
         </CollapsibleTrigger>
         <CollapsibleContent className="space-y-4 pt-4">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}>
-              <SpendingsChart invoices={mockInvoices} />
+              <SpendingsChart invoices={invoices} />
             </motion.div>
         </CollapsibleContent>
       </Collapsible>
@@ -176,6 +186,7 @@ const FinancialHub: React.FC = () => {
         invoice={selectedInvoice}
         isOpen={isDetailViewOpen}
         onClose={closeDetailView}
+        onUpdateInvoice={handleUpdateInvoice}
       />
 
       <motion.div
@@ -186,6 +197,7 @@ const FinancialHub: React.FC = () => {
       >
         <AddInvoiceDialog />
       </motion.div>
+      <Toaster richColors position="bottom-right" />
     </div>
   );
 };
