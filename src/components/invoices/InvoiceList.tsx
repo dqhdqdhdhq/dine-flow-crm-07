@@ -3,6 +3,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Invoice } from '@/types';
 import InvoiceCard from './InvoiceCard';
+import { FileText } from 'lucide-react';
 
 interface InvoiceListProps {
   invoices: Invoice[];
@@ -40,12 +41,13 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ invoices, isFiltered, onInvoi
           ))}
         </motion.div>
       ) : (
-        <div className="flex flex-col items-center justify-center text-center h-48 bg-card/50 rounded-2xl">
-          <p className="text-lg font-medium text-muted-foreground">
-            {isFiltered ? 'No matching invoices found.' : 'All clear! No invoices here.'}
+        <div className="flex flex-col items-center justify-center text-center h-64 bg-card/50 rounded-2xl p-8 border-dashed border-2">
+          <FileText className="h-16 w-16 text-muted-foreground/50 mb-4" strokeWidth={1} />
+          <p className="text-xl font-semibold text-foreground">
+            {isFiltered ? 'No Matches Found' : 'All Clear!'}
           </p>
-          <p className="text-sm text-muted-foreground mt-1">
-            {isFiltered ? 'Try adjusting your filters.' : 'Enjoy the peace of mind.'}
+          <p className="text-base text-muted-foreground mt-2 max-w-xs">
+            {isFiltered ? 'Try adjusting your search or filter criteria to find what you\'re looking for.' : 'There are no invoices to show right now. Enjoy the peace of mind!'}
           </p>
         </div>
       )}

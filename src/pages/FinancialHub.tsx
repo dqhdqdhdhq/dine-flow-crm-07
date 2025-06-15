@@ -1,15 +1,19 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Shield } from 'lucide-react';
+import { Shield, ChevronDown } from 'lucide-react';
 import InvoiceMetrics from '@/components/invoices/InvoiceMetrics';
 import InvoiceList from '@/components/invoices/InvoiceList';
 import InvoiceFilterBar from '@/components/invoices/InvoiceFilterBar';
 import AddInvoiceDialog from '@/components/invoices/AddInvoiceDialog';
 import InvoiceDetailView from '@/components/invoices/InvoiceDetailView';
+import SpendingsChart from '@/components/invoices/SpendingsChart';
 import { mockInvoices } from '@/data/invoicesData';
 import { Invoice, InvoiceStatus, InvoiceCategory } from '@/types';
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { differenceInDays } from 'date-fns';
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type View = 'action-required' | 'recent-activity' | 'all-invoices';
 
@@ -20,6 +24,7 @@ const FinancialHub: React.FC = () => {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [isDetailViewOpen, setIsDetailViewOpen] = useState(false);
   const [activeView, setActiveView] = useState<View>('action-required');
+  const [isChartOpen, setIsChartOpen] = useState(true);
 
   const filteredInvoices = useMemo(() => mockInvoices.filter((invoice) => {
     const matchesSearch = searchQuery === '' || 
@@ -79,6 +84,20 @@ const FinancialHub: React.FC = () => {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <InvoiceMetrics invoices={mockInvoices} />
       </motion.div>
+      
+      <Collapsible open={isChartOpen} onOpenChange={setIsChartOpen}>
+        <CollapsibleTrigger asChild>
+          <Button variant="ghost" className="w-full flex justify-between items-center px-2 py-1.5 text-lg font-bold tracking-tight">
+            Visual Overview
+            <ChevronDown className={cn("h-5 w-5 transition-transform", isChartOpen && "rotate-180")} />
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="space-y-4 pt-4">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}>
+              <SpendingsChart invoices={mockInvoices} />
+            </motion.div>
+        </CollapsibleContent>
+      </Collapsible>
       
       <SegmentedControl
         options={TABS}
