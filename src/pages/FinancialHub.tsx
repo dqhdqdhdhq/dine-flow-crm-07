@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Shield } from 'lucide-react';
 import InvoiceMetrics from '@/components/invoices/InvoiceMetrics';
@@ -9,6 +10,7 @@ import { mockInvoices } from '@/data/invoicesData';
 import { Invoice, InvoiceStatus, InvoiceCategory } from '@/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from '@/components/ui/card';
+import { differenceInDays } from 'date-fns';
 
 const FinancialHub: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -32,6 +34,13 @@ const FinancialHub: React.FC = () => {
   const actionableInvoices = useMemo(() => mockInvoices.filter(invoice => 
     ['pending-approval', 'overdue', 'disputed'].includes(invoice.status)
   ).sort((a,b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()), []);
+
+  const recentInvoices = useMemo(() => {
+    const today = new Date();
+    return mockInvoices
+        .filter(invoice => differenceInDays(today, new Date(invoice.updatedAt)) <= 7)
+        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  }, []);
 
   const isFiltered = searchQuery !== '' || statusFilter !== 'all' || categoryFilter !== 'all';
 
@@ -61,15 +70,16 @@ const FinancialHub: React.FC = () => {
 
       <InvoiceMetrics invoices={mockInvoices} />
 
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:w-[300px]">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="all">All Invoices</TabsTrigger>
+      <Tabs defaultValue="action-required" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 md:w-[450px]">
+          <TabsTrigger value="action-required">Action Required</TabsTrigger>
+          <TabsTrigger value="recent-activity">Recent Activity</TabsTrigger>
+          <TabsTrigger value="all-invoices">All Invoices</TabsTrigger>
         </TabsList>
-        <TabsContent value="overview" className="mt-4">
+        <TabsContent value="action-required" className="mt-4">
             <Card>
                 <CardContent className="p-4 sm:p-6">
-                    <h3 className="text-lg font-semibold mb-4">Actionable Invoices</h3>
+                    <h3 className="text-lg font-semibold mb-4">Action Required</h3>
                     <InvoicesTable 
                         invoices={actionableInvoices} 
                         isFiltered={false}
@@ -78,7 +88,19 @@ const FinancialHub: React.FC = () => {
                 </CardContent>
             </Card>
         </TabsContent>
-        <TabsContent value="all" className="mt-4 space-y-4">
+        <TabsContent value="recent-activity" className="mt-4">
+          <Card>
+            <CardContent className="p-4 sm:p-6">
+              <h3 className="text-lg font-semibold mb-4">Recent Activity (Last 7 Days)</h3>
+              <InvoicesTable 
+                invoices={recentInvoices} 
+                isFiltered={false}
+                onInvoiceClick={handleInvoiceClick}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="all-invoices" className="mt-4 space-y-4">
           <InvoiceFilterBar 
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
