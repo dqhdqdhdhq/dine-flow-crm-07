@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { format } from 'date-fns';
 import { Invoice } from '@/types';
@@ -47,14 +46,14 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({ invoices, isFiltered, onI
             ) : (
               <TableRow>
                 <TableCell colSpan={7} className="h-24 text-center">
-                  {isFiltered ? 'No matching invoices found.' : 'No invoices available.'}
+                  {isFiltered ? 'No matching invoices found.' : 'No invoices to display.'}
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
-      <div className="text-xs text-muted-foreground mt-2">
+      <div className="text-xs text-muted-foreground mt-2 px-1">
         {invoices.length} {invoices.length === 1 ? 'invoice' : 'invoices'} {isFiltered ? 'matching filters' : 'total'}
       </div>
     </div>
