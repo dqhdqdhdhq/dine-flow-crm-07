@@ -1,6 +1,5 @@
-
 import React, { useState, useMemo } from 'react';
-import { Shield, FileText } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import InvoiceMetrics from '@/components/invoices/InvoiceMetrics';
 import InvoicesTable from '@/components/invoices/InvoicesTable';
 import InvoiceFilterBar from '@/components/invoices/InvoiceFilterBar';
@@ -34,7 +33,6 @@ const FinancialHub: React.FC = () => {
     ['pending-approval', 'overdue', 'disputed'].includes(invoice.status)
   ).sort((a,b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()), []);
 
-
   const isFiltered = searchQuery !== '' || statusFilter !== 'all' || categoryFilter !== 'all';
 
   const handleInvoiceClick = (invoice: Invoice) => {
@@ -50,15 +48,10 @@ const FinancialHub: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="bg-primary/10 p-2 rounded-lg">
-            <FileText className="h-6 w-6 text-primary" />
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight">Financial Hub</h1>
-        </div>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold tracking-tight">Financial Hub</h1>
         <div className="flex items-center gap-4">
-          <div className="bg-secondary text-secondary-foreground p-2 rounded-md flex items-center gap-2 text-xs font-medium">
+          <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
             <Shield className="h-4 w-4" />
             <span>Admin Access</span>
           </div>

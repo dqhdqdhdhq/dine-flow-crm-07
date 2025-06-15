@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Invoice } from '@/types';
 import { DollarSign, AlertOctagon, CheckCircle, Hourglass } from 'lucide-react';
-import { format } from 'date-fns';
+import { cn } from "@/lib/utils";
 
 interface InvoiceMetricsProps {
   invoices: Invoice[];
@@ -12,15 +13,29 @@ interface MetricCardProps {
   title: string;
   value: string;
   icon: React.ElementType;
-  colorClassName?: string;
+  variant?: 'default' | 'critical' | 'warning' | 'success';
   subtleText?: string;
 }
 
-const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon: Icon, colorClassName, subtleText }) => (
-  <Card>
+const variantClasses = {
+  default: 'bg-card',
+  critical: 'bg-red-50 dark:bg-red-900/20',
+  warning: 'bg-yellow-50 dark:bg-yellow-900/20',
+  success: 'bg-green-50 dark:bg-green-900/20',
+};
+
+const iconVariantClasses = {
+    default: 'text-muted-foreground',
+    critical: 'text-red-500',
+    warning: 'text-yellow-600',
+    success: 'text-green-600',
+};
+
+const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon: Icon, variant = 'default', subtleText }) => (
+  <Card className={cn("transition-shadow hover:shadow-md", variantClasses[variant])}>
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
       <CardTitle className="text-sm font-medium">{title}</CardTitle>
-      <Icon className={`h-4 w-4 text-muted-foreground ${colorClassName}`} />
+      <Icon className={cn("h-4 w-4", iconVariantClasses[variant])} />
     </CardHeader>
     <CardContent>
       <div className="text-2xl font-bold">{value}</div>
@@ -66,31 +81,32 @@ const InvoiceMetrics: React.FC<InvoiceMetricsProps> = ({ invoices }) => {
     .length;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <MetricCard
         title="Due This Month"
         value={`$${totalDueThisMonth.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
         icon={DollarSign}
         subtleText={`for ${new Date().toLocaleString('default', { month: 'long' })}`}
+        variant="default"
       />
       <MetricCard
         title="Total Overdue"
         value={`$${totalOverdue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
         icon={AlertOctagon}
-        colorClassName="text-red-500"
+        variant="critical"
       />
       <MetricCard
         title="Paid This Month"
         value={`$${totalPaidThisMonth.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
         icon={CheckCircle}
-        colorClassName="text-green-600"
+        variant="success"
       />
       <MetricCard
         title="Pending Approvals"
         value={String(pendingApprovals)}
         icon={Hourglass}
-        colorClassName="text-yellow-600"
         subtleText="invoices awaiting action"
+        variant="warning"
       />
     </div>
   );
