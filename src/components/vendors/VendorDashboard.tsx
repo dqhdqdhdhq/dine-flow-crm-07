@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { PurchaseOrder, Supplier } from '@/types';
 import VendorProfileCard from './dashboard/VendorProfileCard';
@@ -6,6 +5,7 @@ import SpendingOverviewCard from './dashboard/SpendingOverviewCard';
 import UpcomingDeliveriesCard from './dashboard/UpcomingDeliveriesCard';
 import FrequentItemsCard from './dashboard/FrequentItemsCard';
 import RecentOrdersList from './dashboard/RecentOrdersList';
+import VendorStatsCards from './dashboard/VendorStatsCards';
 
 interface VendorDashboardProps {
   vendorId: string | null;
@@ -51,19 +51,17 @@ const VendorDashboard: React.FC<VendorDashboardProps> = ({
 
   return (
     <div className="space-y-6 animate-fade-in">
+      <VendorStatsCards orders={supplierOrders} />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
           <VendorProfileCard supplier={selectedSupplier} />
+          <RecentOrdersList orders={supplierOrders} />
         </div>
         <div className="space-y-6">
           <SpendingOverviewCard spendingData={spendingData} />
           <UpcomingDeliveriesCard deliveries={upcomingDeliveries} />
           <FrequentItemsCard items={frequentItems} />
         </div>
-      </div>
-      
-      <div>
-        <RecentOrdersList orders={supplierOrders} />
       </div>
     </div>
   );

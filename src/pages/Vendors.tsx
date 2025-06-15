@@ -27,6 +27,7 @@ import OrderManagementList from '@/components/vendors/OrderManagementList';
 import OrderTemplatesList from '@/components/vendors/OrderTemplatesList';
 import AddOrderTemplateDialog from '@/components/vendors/AddOrderTemplateDialog';
 import EditOrderTemplateDialog from '@/components/vendors/EditOrderTemplateDialog';
+import GenerateOrderFromTemplateDialog from '@/components/vendors/GenerateOrderFromTemplateDialog';
 
 const Vendors: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -55,6 +56,8 @@ const Vendors: React.FC = () => {
   const [editTemplateDialogOpen, setEditTemplateDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<OrderTemplate | null>(null);
   const [selectedVendorForPO, setSelectedVendorForPO] = useState<string | null>(null);
+  const [generateOrderDialogOpen, setGenerateOrderDialogOpen] = useState(false);
+  const [templateForGeneration, setTemplateForGeneration] = useState<OrderTemplate | null>(null);
 
   // Status filter options for vendors
   const handleStatusFilterChange = (status: string) => {
@@ -88,7 +91,15 @@ const Vendors: React.FC = () => {
   // Handle adding a new purchase order
   const handleAddPurchaseOrder = (newOrder: PurchaseOrder) => {
     setPurchaseOrders(prev => [newOrder, ...prev]);
-    toast.success(`Purchase order for ${newOrder.supplierName} created successfully`);
+    
+    if (newOrder.templateId) {
+      toast.info(`New draft PO created from template "${newOrder.templateName}".`);
+      setSelectedVendor(newOrder.supplierId);
+      setActiveTab('manage-orders');
+    } else {
+      toast.success(`Purchase order for ${newOrder.supplierName} created successfully`);
+    }
+    
     setSelectedVendorForPO(null);
   };
 
@@ -133,34 +144,8 @@ const Vendors: React.FC = () => {
   };
 
   const handleGenerateOrderFromTemplate = (template: OrderTemplate) => {
-    const totalAmount = template.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-    
-    const newOrder: PurchaseOrder = {
-      id: uuidv4(),
-      supplierId: template.supplierId,
-      supplierName: template.supplierName,
-      status: 'draft',
-      orderDate: new Date().toISOString(),
-      expectedDeliveryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days from now, can be improved
-      items: template.items.map((item) => ({
-        ...item,
-        id: uuidv4(),
-        inventoryItemId: item.inventoryItemId || `generic-${uuidv4()}`,
-        receivedQuantity: 0,
-        notes: '',
-      })),
-      totalAmount,
-      notes: `Generated from template: ${template.name}`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      templateId: template.id,
-      templateName: template.name,
-    };
-    
-    handleAddPurchaseOrder(newOrder);
-    toast.info(`New draft PO created from template "${template.name}".`);
-    setSelectedVendor(template.supplierId);
-    setActiveTab('manage-orders');
+    setTemplateForGeneration(template);
+    setGenerateOrderDialogOpen(true);
   };
 
   // Handle vendor card actions
@@ -503,6 +488,16 @@ const Vendors: React.FC = () => {
         suppliers={suppliers}
         onTemplateUpdated={handleUpdateTemplate}
         editingTemplate={editingTemplate}
+      />
+
+      <GenerateOrderFromTemplateDialog
+        open={generateOrderDialogOpen}
+        onOpenChange={(open) => {
+          setGenerateOrderDialogOpen(open);
+          if (!open) setTemplateForGeneration(null);
+        }}
+        template={templateForGeneration}
+        onGenerateOrder={handleAddPurchaseOrder}
       />
     </div>
   );
