@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { format } from 'date-fns';
 import { Invoice, InvoiceStatus } from '@/types';
@@ -71,13 +70,15 @@ const InvoiceDetailView: React.FC<InvoiceDetailViewProps> = ({ invoice, isOpen, 
                 
                 <Separator />
 
-                <div className="py-3">
-                    <div className="flex items-center gap-3 text-sm text-muted-foreground mb-2">
-                        <FileText className="h-4 w-4" />
-                        <span>Description</span>
-                    </div>
-                    <p className="text-sm bg-muted/50 p-3 rounded-md">{invoice.description}</p>
-                </div>
+                {invoice.notes && (
+                  <div className="py-3">
+                      <div className="flex items-center gap-3 text-sm text-muted-foreground mb-2">
+                          <FileText className="h-4 w-4" />
+                          <span>Notes</span>
+                      </div>
+                      <p className="text-sm bg-muted/50 p-3 rounded-md">{invoice.notes}</p>
+                  </div>
+                )}
             </div>
         </ScrollArea>
         <SheetFooter className="p-6 bg-muted/30 border-t">
