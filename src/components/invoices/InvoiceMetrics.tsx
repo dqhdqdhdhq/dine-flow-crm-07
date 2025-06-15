@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Invoice } from '@/types';
 import { DollarSign, AlertOctagon, CheckCircle, Hourglass } from 'lucide-react';
 import { cn } from "@/lib/utils";
+import AnimatedCounter from '@/components/ui/AnimatedCounter';
 
 interface InvoiceMetricsProps {
   invoices: Invoice[];
@@ -11,17 +11,17 @@ interface InvoiceMetricsProps {
 
 interface MetricCardProps {
   title: string;
-  value: string;
+  value: string | JSX.Element;
   icon: React.ElementType;
   variant?: 'default' | 'critical' | 'warning' | 'success';
   subtleText?: string;
 }
 
 const variantClasses = {
-  default: 'bg-card',
-  critical: 'bg-red-50 dark:bg-red-900/20',
-  warning: 'bg-yellow-50 dark:bg-yellow-900/20',
-  success: 'bg-green-50 dark:bg-green-900/20',
+  default: 'bg-card/80 dark:bg-card/60',
+  critical: 'bg-red-900/30 dark:bg-red-500/15',
+  warning: 'bg-yellow-900/30 dark:bg-yellow-500/15',
+  success: 'bg-green-900/30 dark:bg-green-500/15',
 };
 
 const iconVariantClasses = {
@@ -32,7 +32,7 @@ const iconVariantClasses = {
 };
 
 const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon: Icon, variant = 'default', subtleText }) => (
-  <Card className={cn("transition-shadow hover:shadow-md", variantClasses[variant])}>
+  <Card className={cn("transition-shadow hover:shadow-xl backdrop-blur-xl border-white/10", variantClasses[variant])}>
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
       <CardTitle className="text-sm font-medium">{title}</CardTitle>
       <Icon className={cn("h-4 w-4", iconVariantClasses[variant])} />
@@ -84,26 +84,26 @@ const InvoiceMetrics: React.FC<InvoiceMetricsProps> = ({ invoices }) => {
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <MetricCard
         title="Due This Month"
-        value={`$${totalDueThisMonth.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+        value={<AnimatedCounter value={totalDueThisMonth} prefix="$" />}
         icon={DollarSign}
         subtleText={`for ${new Date().toLocaleString('default', { month: 'long' })}`}
         variant="default"
       />
       <MetricCard
         title="Total Overdue"
-        value={`$${totalOverdue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+        value={<AnimatedCounter value={totalOverdue} prefix="$" />}
         icon={AlertOctagon}
         variant="critical"
       />
       <MetricCard
         title="Paid This Month"
-        value={`$${totalPaidThisMonth.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+        value={<AnimatedCounter value={totalPaidThisMonth} prefix="$" />}
         icon={CheckCircle}
         variant="success"
       />
       <MetricCard
         title="Pending Approvals"
-        value={String(pendingApprovals)}
+        value={<AnimatedCounter value={pendingApprovals} fractionDigits={0} />}
         icon={Hourglass}
         subtleText="invoices awaiting action"
         variant="warning"
