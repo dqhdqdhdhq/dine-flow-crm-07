@@ -1,6 +1,7 @@
+
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, ChevronDown } from 'lucide-react';
+import { Shield, ChevronDown, Search } from 'lucide-react';
 import InvoiceMetrics from '@/components/invoices/InvoiceMetrics';
 import InvoiceList from '@/components/invoices/InvoiceList';
 import InvoiceFilterBar from '@/components/invoices/InvoiceFilterBar';
@@ -14,6 +15,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { differenceInDays } from 'date-fns';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
 
 type View = 'action-required' | 'recent-activity' | 'all-invoices';
 
@@ -26,30 +28,39 @@ const FinancialHub: React.FC = () => {
   const [activeView, setActiveView] = useState<View>('action-required');
   const [isChartOpen, setIsChartOpen] = useState(true);
 
-  const filteredInvoices = useMemo(() => mockInvoices.filter((invoice) => {
-    const matchesSearch = searchQuery === '' || 
-      invoice.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      invoice.vendorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      invoice.amount.toString().includes(searchQuery);
-    
-    const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter;
-    const matchesCategory = categoryFilter === 'all' || invoice.category === categoryFilter;
-    
-    return matchesSearch && matchesStatus && matchesCategory;
-  }), [searchQuery, statusFilter, categoryFilter]);
+  const applySearch = (invoices: Invoice[], query: string) => {
+    if (query === '') return invoices;
+    const lowerCaseQuery = query.toLowerCase();
+    return invoices.filter((invoice) => 
+      invoice.invoiceNumber.toLowerCase().includes(lowerCaseQuery) ||
+      invoice.vendorName.toLowerCase().includes(lowerCaseQuery) ||
+      invoice.amount.toString().includes(query)
+    );
+  }
 
-  const actionableInvoices = useMemo(() => mockInvoices.filter(invoice => 
-    ['pending-approval', 'overdue', 'disputed'].includes(invoice.status)
-  ).sort((a,b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()), []);
+  const filteredInvoices = useMemo(() => {
+    const baseInvoices = mockInvoices.filter((invoice) => {
+      const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter;
+      const matchesCategory = categoryFilter === 'all' || invoice.category === categoryFilter;
+      return matchesStatus && matchesCategory;
+    });
+    return applySearch(baseInvoices, searchQuery);
+  }, [searchQuery, statusFilter, categoryFilter]);
+
+  const actionableInvoices = useMemo(() => {
+    const baseInvoices = mockInvoices.filter(invoice => 
+      ['pending-approval', 'overdue', 'disputed'].includes(invoice.status)
+    ).sort((a,b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+    return applySearch(baseInvoices, searchQuery);
+  }, [searchQuery]);
 
   const recentInvoices = useMemo(() => {
     const today = new Date();
-    return mockInvoices
+    const baseInvoices = mockInvoices
         .filter(invoice => differenceInDays(today, new Date(invoice.updatedAt)) <= 7)
         .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-  }, []);
-
-  const isFiltered = searchQuery !== '' || statusFilter !== 'all' || categoryFilter !== 'all';
+    return applySearch(baseInvoices, searchQuery);
+  }, [searchQuery]);
 
   const handleInvoiceClick = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
@@ -77,12 +88,74 @@ const FinancialHub: React.FC = () => {
             <Shield className="h-4 w-4" />
             <span>Admin Access</span>
           </div>
-          {/* Will be replaced by a FAB */}
         </div>
       </div>
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <InvoiceMetrics invoices={mockInvoices} />
+      </motion.div>
+      
+      <div className="relative w-full">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+        <Input
+          type="search"
+          placeholder="Search by vendor, invoice #, or amount..."
+          className="w-full pl-10"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
+      
+      <div className="w-full overflow-x-auto pb-2 no-scrollbar">
+        <SegmentedControl
+          options={TABS}
+          value={activeView}
+          onValueChange={(value) => setActiveView(value as View)}
+          className="py-2 min-w-max"
+        />
+      </div>
+
+      <motion.div
+        key={activeView}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        {activeView === 'action-required' && (
+          <div className="space-y-4">
+            <h3 className="text-2xl font-bold tracking-tight px-1">Action Required</h3>
+            <InvoiceList 
+                invoices={actionableInvoices} 
+                isFiltered={searchQuery !== ''}
+                onInvoiceClick={handleInvoiceClick}
+            />
+          </div>
+        )}
+        {activeView === 'recent-activity' && (
+          <div className="space-y-4">
+            <h3 className="text-2xl font-bold tracking-tight px-1">Recent Activity (Last 7 Days)</h3>
+            <InvoiceList 
+              invoices={recentInvoices} 
+              isFiltered={searchQuery !== ''}
+              onInvoiceClick={handleInvoiceClick}
+            />
+          </div>
+        )}
+        {activeView === 'all-invoices' && (
+          <div className="space-y-4">
+            <InvoiceFilterBar 
+              statusFilter={statusFilter}
+              setStatusFilter={setStatusFilter}
+              categoryFilter={categoryFilter}
+              setCategoryFilter={setCategoryFilter}
+            />
+            <InvoiceList 
+              invoices={filteredInvoices} 
+              isFiltered={searchQuery !== '' || statusFilter !== 'all' || categoryFilter !== 'all'}
+              onInvoiceClick={handleInvoiceClick}
+            />
+          </div>
+        )}
       </motion.div>
       
       <Collapsible open={isChartOpen} onOpenChange={setIsChartOpen}>
@@ -98,58 +171,6 @@ const FinancialHub: React.FC = () => {
             </motion.div>
         </CollapsibleContent>
       </Collapsible>
-      
-      <SegmentedControl
-        options={TABS}
-        value={activeView}
-        onValueChange={(value) => setActiveView(value as View)}
-        className="py-2"
-      />
-
-      <motion.div
-        key={activeView}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        {activeView === 'action-required' && (
-          <div className="space-y-4">
-            <h3 className="text-2xl font-bold tracking-tight px-1">Action Required</h3>
-            <InvoiceList 
-                invoices={actionableInvoices} 
-                isFiltered={false}
-                onInvoiceClick={handleInvoiceClick}
-            />
-          </div>
-        )}
-        {activeView === 'recent-activity' && (
-          <div className="space-y-4">
-            <h3 className="text-2xl font-bold tracking-tight px-1">Recent Activity (Last 7 Days)</h3>
-            <InvoiceList 
-              invoices={recentInvoices} 
-              isFiltered={false}
-              onInvoiceClick={handleInvoiceClick}
-            />
-          </div>
-        )}
-        {activeView === 'all-invoices' && (
-          <div className="space-y-4">
-            <InvoiceFilterBar 
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              statusFilter={statusFilter}
-              setStatusFilter={setStatusFilter}
-              categoryFilter={categoryFilter}
-              setCategoryFilter={setCategoryFilter}
-            />
-            <InvoiceList 
-              invoices={filteredInvoices} 
-              isFiltered={isFiltered}
-              onInvoiceClick={handleInvoiceClick}
-            />
-          </div>
-        )}
-      </motion.div>
 
       <InvoiceDetailView 
         invoice={selectedInvoice}

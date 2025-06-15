@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
-import { Search, Filter, ChevronDown } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Filter, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -15,8 +14,6 @@ import { InvoiceStatus, InvoiceCategory } from '@/types';
 import { getInvoiceCategoryLabel, getInvoiceStatusLabel } from '@/data/invoicesData';
 
 interface InvoiceFilterBarProps {
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
   statusFilter: InvoiceStatus | 'all';
   setStatusFilter: (status: InvoiceStatus | 'all') => void;
   categoryFilter: InvoiceCategory | 'all';
@@ -24,26 +21,24 @@ interface InvoiceFilterBarProps {
 }
 
 const InvoiceFilterBar: React.FC<InvoiceFilterBarProps> = ({
-  searchQuery,
-  setSearchQuery,
   statusFilter,
   setStatusFilter,
   categoryFilter,
   setCategoryFilter,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
 
   return (
     <Collapsible
       open={isOpen}
       onOpenChange={setIsOpen}
-      className="space-y-4 rounded-lg border px-4 py-3"
+      className="space-y-2 rounded-lg border px-4 py-3"
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Filter className="h-5 w-5" />
           <h4 className="text-md font-semibold">
-            Filter Invoices
+            Filter by
           </h4>
         </div>
         <CollapsibleTrigger asChild>
@@ -53,18 +48,7 @@ const InvoiceFilterBar: React.FC<InvoiceFilterBarProps> = ({
           </Button>
         </CollapsibleTrigger>
       </div>
-      <CollapsibleContent className="space-y-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search invoices by number, vendor, or amount..."
-            className="pl-8"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        
+      <CollapsibleContent className="data-[state=open]:pt-2">
         <div className="flex flex-col sm:flex-row gap-2">
           <div className="flex-1">
             <Select 

@@ -13,6 +13,7 @@ import {
 import { Invoice } from '@/types';
 import { getInvoiceCategoryLabel } from '@/data/invoicesData';
 import { cn } from "@/lib/utils";
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface SpendingsChartProps {
   invoices: Invoice[];
@@ -29,6 +30,7 @@ const chartColors = {
 };
 
 const SpendingsChart: React.FC<SpendingsChartProps> = ({ invoices }) => {
+  const isMobile = useIsMobile();
   const { chartData, chartConfig } = useMemo(() => {
     const categoryTotals = invoices.reduce((acc, invoice) => {
       const categoryLabel = getInvoiceCategoryLabel(invoice.category);
@@ -66,7 +68,13 @@ const SpendingsChart: React.FC<SpendingsChartProps> = ({ invoices }) => {
         <CardDescription>A breakdown of your expenses for all invoices.</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[300px]">
+        <ChartContainer 
+          config={chartConfig} 
+          className={cn(
+            "mx-auto aspect-square",
+            isMobile ? "max-h-[250px]" : "max-h-[300px]"
+          )}
+        >
           <PieChart>
             <ChartTooltip
                 cursor={false}
@@ -76,7 +84,7 @@ const SpendingsChart: React.FC<SpendingsChartProps> = ({ invoices }) => {
               data={chartData}
               dataKey="value"
               nameKey="name"
-              innerRadius={60}
+              innerRadius={isMobile ? 50 : 60}
               strokeWidth={5}
             >
                 {chartData.map((entry, index) => (
