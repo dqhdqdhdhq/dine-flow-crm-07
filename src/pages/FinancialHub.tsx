@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Shield } from 'lucide-react';
@@ -84,7 +85,7 @@ const FinancialHub: React.FC = () => {
       <SegmentedControl
         options={TABS}
         value={activeView}
-        onValueChange={setActiveView}
+        onValueChange={(value) => setActiveView(value)}
         className="py-2"
       />
 
