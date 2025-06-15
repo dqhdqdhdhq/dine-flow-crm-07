@@ -1,16 +1,14 @@
-
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Shield } from 'lucide-react';
 import InvoiceMetrics from '@/components/invoices/InvoiceMetrics';
-import InvoicesTable from '@/components/invoices/InvoicesTable';
+import InvoiceList from '@/components/invoices/InvoiceList';
 import InvoiceFilterBar from '@/components/invoices/InvoiceFilterBar';
 import AddInvoiceDialog from '@/components/invoices/AddInvoiceDialog';
 import InvoiceDetailView from '@/components/invoices/InvoiceDetailView';
 import { mockInvoices } from '@/data/invoicesData';
 import { Invoice, InvoiceStatus, InvoiceCategory } from '@/types';
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
-import { Card, CardContent } from '@/components/ui/card';
 import { differenceInDays } from 'date-fns';
 
 type View = 'action-required' | 'recent-activity' | 'all-invoices';
@@ -85,7 +83,7 @@ const FinancialHub: React.FC = () => {
       <SegmentedControl
         options={TABS}
         value={activeView}
-        onValueChange={(value) => setActiveView(value)}
+        onValueChange={(value) => setActiveView(value as View)}
         className="py-2"
       />
 
@@ -96,28 +94,24 @@ const FinancialHub: React.FC = () => {
         transition={{ duration: 0.3 }}
       >
         {activeView === 'action-required' && (
-          <Card className="bg-card/80 dark:bg-card/60 backdrop-blur-xl">
-            <CardContent className="p-4 sm:p-6">
-              <h3 className="text-lg font-semibold mb-4">Action Required</h3>
-              <InvoicesTable 
-                  invoices={actionableInvoices} 
-                  isFiltered={false}
-                  onInvoiceClick={handleInvoiceClick}
-              />
-            </CardContent>
-          </Card>
-        )}
-        {activeView === 'recent-activity' && (
-          <Card className="bg-card/80 dark:bg-card/60 backdrop-blur-xl">
-            <CardContent className="p-4 sm:p-6">
-              <h3 className="text-lg font-semibold mb-4">Recent Activity (Last 7 Days)</h3>
-              <InvoicesTable 
-                invoices={recentInvoices} 
+          <div className="space-y-4">
+            <h3 className="text-2xl font-bold tracking-tight px-1">Action Required</h3>
+            <InvoiceList 
+                invoices={actionableInvoices} 
                 isFiltered={false}
                 onInvoiceClick={handleInvoiceClick}
-              />
-            </CardContent>
-          </Card>
+            />
+          </div>
+        )}
+        {activeView === 'recent-activity' && (
+          <div className="space-y-4">
+            <h3 className="text-2xl font-bold tracking-tight px-1">Recent Activity (Last 7 Days)</h3>
+            <InvoiceList 
+              invoices={recentInvoices} 
+              isFiltered={false}
+              onInvoiceClick={handleInvoiceClick}
+            />
+          </div>
         )}
         {activeView === 'all-invoices' && (
           <div className="space-y-4">
@@ -129,15 +123,11 @@ const FinancialHub: React.FC = () => {
               categoryFilter={categoryFilter}
               setCategoryFilter={setCategoryFilter}
             />
-            <Card className="bg-card/80 dark:bg-card/60 backdrop-blur-xl">
-              <CardContent className="p-0">
-                <InvoicesTable 
-                  invoices={filteredInvoices} 
-                  isFiltered={isFiltered}
-                  onInvoiceClick={handleInvoiceClick}
-                />
-              </CardContent>
-            </Card>
+            <InvoiceList 
+              invoices={filteredInvoices} 
+              isFiltered={isFiltered}
+              onInvoiceClick={handleInvoiceClick}
+            />
           </div>
         )}
       </motion.div>
